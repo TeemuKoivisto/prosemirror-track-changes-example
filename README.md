@@ -1,4 +1,4 @@
-# ProseMirror track-changes example
+# [ProseMirror track-changes example](https://teemukoivisto.github.io/prosemirror-track-changes-example/)
 
 This example app shows how a very primitive track-changes functionality could be implemented with prosemirror-changeset.
 

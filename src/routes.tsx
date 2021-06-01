@@ -6,7 +6,7 @@ import { WrappedRoute } from './components/WrappedRoute'
 import { FrontPage } from './pages/FrontPage'
 
 export const Routes = () => (
-  <BrowserRouter>
+  <BrowserRouter basename={process.env.PUBLIC_URL}>
     <Switch>
       <WrappedRoute exact path="/" component={FrontPage}/>
       <Redirect to="/" />
