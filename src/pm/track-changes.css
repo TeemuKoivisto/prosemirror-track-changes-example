@@ -1,0 +1,6 @@
+.ProseMirror .inserted {
+  background-color: greenyellow;
+}
+.ProseMirror .deleted {
+  background: #ffa4a4;
+}
