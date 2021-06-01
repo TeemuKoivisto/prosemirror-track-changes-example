@@ -51,6 +51,7 @@ export const trackChangesPlugin = () =>
       apply(tr, value, oldState, newState) {
         const changeSet = value.changeSet.addSteps(tr.doc, tr.mapping.maps, spanData(tr, oldState))
         const decorations: Decoration[] = []
+        let allDeletionsLength = 0
 
         changeSet.changes.forEach((change) => {
           let insertFrom = change.fromB
@@ -60,17 +61,16 @@ export const trackChangesPlugin = () =>
             insertFrom += span.length
           })
 
-          let deletedFrom = change.fromA
           change.deleted.forEach((span) => {
             // debugger
             decorations.push(
-              Decoration.widget(deletedFrom, deletedWidget(span), {
+              Decoration.widget(change.fromA + allDeletionsLength, deletedWidget(span), {
                 side: -1,
                 marks: [schema.marks.strikethrough.create()],
               })
             )
             // @ts-ignore
-            deletedFrom += span.length
+            allDeletionsLength -= span.length
           })
         })
 
