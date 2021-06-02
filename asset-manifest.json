@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/prosemirror-track-changes-example/static/css/main.b6d2d951.chunk.css",
-    "main.js": "/prosemirror-track-changes-example/static/js/main.f813d3cb.chunk.js",
-    "main.js.map": "/prosemirror-track-changes-example/static/js/main.f813d3cb.chunk.js.map",
+    "main.js": "/prosemirror-track-changes-example/static/js/main.ac9e37d5.chunk.js",
+    "main.js.map": "/prosemirror-track-changes-example/static/js/main.ac9e37d5.chunk.js.map",
     "runtime-main.js": "/prosemirror-track-changes-example/static/js/runtime-main.c46f7f81.js",
     "runtime-main.js.map": "/prosemirror-track-changes-example/static/js/runtime-main.c46f7f81.js.map",
     "static/js/2.629dcd9b.chunk.js": "/prosemirror-track-changes-example/static/js/2.629dcd9b.chunk.js",
@@ -19,6 +19,6 @@
     "static/js/runtime-main.c46f7f81.js",
     "static/js/2.629dcd9b.chunk.js",
     "static/css/main.b6d2d951.chunk.css",
-    "static/js/main.f813d3cb.chunk.js"
+    "static/js/main.ac9e37d5.chunk.js"
   ]
 }
