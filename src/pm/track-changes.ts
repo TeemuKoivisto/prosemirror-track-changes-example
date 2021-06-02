@@ -15,9 +15,9 @@ export interface PluginState {
 
 export const trackChangesPluginKey = new PluginKey<PluginState, ExampleSchema>('track-changes')
 
-const deletedWidget = (span: Span) => (view: EditorView, getPos: () => number) => {
+const deletedWidget = (content: string) => (view: EditorView, getPos: () => number) => {
   const element = document.createElement('span')
-  element.textContent = span.data
+  element.textContent = content
   element.classList.add('deleted')
   return element
 }
@@ -65,9 +65,10 @@ export const trackChangesPlugin = () =>
           })
 
           change.deleted.forEach((span) => {
-            // debugger
+            // @ts-ignore
+            const content = changeSet.startDoc.textBetween(change.fromA, change.fromA + span.length)
             decorations.push(
-              Decoration.widget(change.fromA + allDeletionsLength + allInsertsLength, deletedWidget(span), {
+              Decoration.widget(change.fromA + allDeletionsLength + allInsertsLength, deletedWidget(content), {
                 side: -1,
                 marks: [schema.marks.strikethrough.create()],
               })
