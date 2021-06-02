@@ -22,6 +22,12 @@ const deletedWidget = (content: string) => (view: EditorView, getPos: () => numb
   return element
 }
 
+/**
+ * Not in use anymore as the content is now derived from doc (which makes joinChanges possible)
+ * @param tr 
+ * @param oldState 
+ * @returns 
+ */
 function spanData(tr: Transaction, oldState: EditorState) {
   return tr.steps.map(s => {
     if (s instanceof ReplaceStep) {
@@ -36,6 +42,20 @@ function spanData(tr: Transaction, oldState: EditorState) {
     }
   })
 }
+
+/**
+ * Combines changes into one change, basically needed for deletions only since they behave weirdly
+ * when the deletions are adjacent (probably a thing with adjacent decorations rather)
+ * @param changes 
+ * @returns 
+ */
+const joinChanges = (changes: Span[]) => changes.reduce((acc, cur, idx) => {
+  if (idx === 0) return [cur]
+  return Span.join([cur], acc, (a: any, b: any) => {
+    // Should combine the metadatas, usernames and timestamps et cetera
+    return b + a
+  })
+}, [] as Span[])
 
 export const trackChangesPlugin = () =>
   new Plugin({
@@ -64,7 +84,7 @@ export const trackChangesPlugin = () =>
             allInsertsLength += span.length
           })
 
-          change.deleted.forEach((span) => {
+          joinChanges(change.deleted).forEach((span) => {
             // @ts-ignore
             const content = changeSet.startDoc.textBetween(change.fromA, change.fromA + span.length)
             decorations.push(
