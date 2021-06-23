@@ -4,7 +4,7 @@ import { EditorState, Transaction } from 'prosemirror-state'
 import { exampleSetup } from 'prosemirror-example-setup'
 
 import { schema } from './schema'
-import { trackChangesPlugin } from './track-changes'
+import { trackChangesPlugin } from './track-changes-plugin'
 
 import './editor.css'
 import './prosemirror-example-setup.css'
@@ -36,7 +36,9 @@ export function PMEditor(props: EditorProps) {
   function createEditorState() {
     return EditorState.create({
       schema,
-      plugins: exampleSetup({ schema }).concat(trackChangesPlugin()),
+      plugins: exampleSetup({ schema }).concat(
+        trackChangesPlugin(),
+      ),
     })
   }
 
