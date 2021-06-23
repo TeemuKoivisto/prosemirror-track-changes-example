@@ -3,12 +3,13 @@ import { Plugin, PluginKey } from 'prosemirror-state'
 import { Decoration, DecorationSet } from 'prosemirror-view'
 import { ChangeSet } from 'prosemirror-changeset'
 
-import { ExampleSchema, schema } from './schema'
+import { ExampleSchema } from './schema'
 
 export interface PluginState {
   changeSet: ChangeSet
   decorationSet: DecorationSet<ExampleSchema>
   userColors: Map<string, [string, string]>
+  userID: string
 }
 
 export const trackChangesPluginKey = new PluginKey<PluginState, ExampleSchema>('track-changes')
@@ -35,15 +36,19 @@ export const trackChangesPlugin = () =>
           changeSet: ChangeSet.create(state.doc),
           decorationSet: DecorationSet.empty,
           userColors: new Map(),
+          userID: '1',
         }
       },
 
       apply(tr, value, oldState, newState) {
-        const userID = 'current-user'
-        if (!value.userColors.has(userID)) {
-          value.userColors.set(userID, colorScheme[value.userColors.size])
+        if (tr.getMeta('set-userID')) {
+          return { ...value, userID: tr.getMeta('set-userID') }
         }
-        const changeSet = value.changeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
+        const { changeSet: oldChangeSet, userColors, userID } = value
+        if (!userColors.has(userID)) {
+          userColors.set(userID, colorScheme[userColors.size])
+        }
+        const changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
         const decorations: Decoration[] = []
         let allDeletionsLength = 0
         let allInsertsLength = 0
@@ -70,7 +75,7 @@ export const trackChangesPlugin = () =>
             decorations.push(
               Decoration.widget(start + allDeletionsLength + allInsertsLength, deletedWidget(content, style), {
                 side: 0,
-                marks: [schema.marks.strikethrough.create()],
+                marks: [oldState.schema.marks.strikethrough.create()],
               })
             )
             // @ts-ignore
@@ -83,7 +88,8 @@ export const trackChangesPlugin = () =>
         return {
           changeSet,
           decorationSet: DecorationSet.create(tr.doc, decorations),
-          userColors: value.userColors,
+          userColors,
+          userID,
         }
       },
     },
@@ -93,4 +99,3 @@ export const trackChangesPlugin = () =>
       },
     },
   })
-

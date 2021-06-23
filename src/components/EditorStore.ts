@@ -18,6 +18,10 @@ export class EditorStore {
     }
   }
 
+  setUserID = (id: string) => {
+    this.view?.dispatch(this.view?.state.tr.setMeta('set-userID', id))
+  }
+
   setEditorView = (view: EditorView) => {
     this.view = view
     if (this.currentEditorState) {
