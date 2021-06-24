@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styled from 'styled-components'
 
-import { useEditorContext } from './EditorContext'
+import { useEditorContext } from 'pm/EditorContext'
 
 interface IProps {
   className?: string
@@ -10,10 +10,11 @@ interface IProps {
 export function SelectUser(props: IProps) {
   const { className } = props
   const [userID, setUserID] = useState('1')
-  const ctx = useEditorContext()
+  const { viewProvider } = useEditorContext()
 
   function handleSelectUser(id: string) {
-    ctx.setUserID(id)
+    const view = viewProvider.view
+    view.dispatch(view.state.tr.setMeta('set-userID', id))
     setUserID(id)
   }
   return (

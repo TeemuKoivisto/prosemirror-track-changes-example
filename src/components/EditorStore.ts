@@ -1,10 +1,11 @@
 import { EditorView } from 'prosemirror-view'
 import { EditorState } from 'prosemirror-state'
+import { ExampleSchema } from 'pm/schema'
 
 export class EditorStore {
 
-  view?: EditorView
-  currentEditorState?: {[key: string]: any}
+  _view?: EditorView<ExampleSchema>
+  jsonEditorState?: {[key: string]: any}
   localStorageKey: string
 
   constructor(key: string) {
@@ -13,31 +14,26 @@ export class EditorStore {
       const existing = localStorage.getItem(this.localStorageKey)
       if (existing && existing !== null && existing.length > 0) {
         let stored = JSON.parse(existing)
-        this.currentEditorState = stored
+        this.jsonEditorState = stored
       }
     }
   }
 
-  setUserID = (id: string) => {
-    this.view?.dispatch(this.view?.state.tr.setMeta('set-userID', id))
-  }
-
   setEditorView = (view: EditorView) => {
-    this.view = view
-    if (this.currentEditorState) {
+    this._view = view
+    if (this.jsonEditorState) {
       const state = EditorState.fromJSON(
         {
-          schema: this.view.state.schema,
-          plugins: this.view.state.plugins,
+          schema: this._view.state.schema,
+          plugins: this._view.state.plugins,
         },
-        this.currentEditorState
+        this.jsonEditorState
       )
-      this.view.updateState(state)
+      this._view.updateState(state)
     }
   }
 
   syncCurrentEditorState = () => {
-    const newState = this.view!.state.toJSON()
-    localStorage.setItem(this.localStorageKey, JSON.stringify(newState))
+    localStorage.setItem(this.localStorageKey, JSON.stringify(this._view?.state.toJSON()))
   }
 }

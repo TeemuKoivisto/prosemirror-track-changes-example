@@ -1,7 +1,7 @@
 import { EditorView } from 'prosemirror-view'
 import { Plugin, PluginKey } from 'prosemirror-state'
 import { Decoration, DecorationSet } from 'prosemirror-view'
-import { ChangeSet } from 'prosemirror-changeset'
+import { Change, ChangeSet } from 'prosemirror-changeset'
 
 import { ExampleSchema } from './schema'
 
@@ -28,7 +28,7 @@ const deletedWidget = (content: string, style: string) => (view: EditorView, get
 }
 
 export const trackChangesPlugin = () =>
-  new Plugin({
+  new Plugin<PluginState, ExampleSchema>({
     key: trackChangesPluginKey,
     state: {
       init(config, state) {
@@ -44,21 +44,44 @@ export const trackChangesPlugin = () =>
         if (tr.getMeta('set-userID')) {
           return { ...value, userID: tr.getMeta('set-userID') }
         }
-        const { changeSet: oldChangeSet, userColors, userID } = value
+        const { userColors, userID } = value
+        let { changeSet } = value
+        if (tr.getMeta('revert-change') !== undefined) {
+          const removedIndex = tr.getMeta('revert-change')
+          let removedChange: Change | undefined
+          let updatedChanges = changeSet.changes.reduce((acc, cur, i) => {
+            if (i === removedIndex) {
+              removedChange = cur
+            } else if (removedChange) {
+              const fromA = cur.fromA - removedChange.lenA
+              const toA = cur.toA - removedChange.lenA
+              const fromB = cur.fromB + removedChange.lenA
+              const toB = cur.toB + removedChange.lenA
+              acc.push(new Change(fromA, toA, fromB, toB, cur.deleted, cur.inserted))
+            } else {
+              acc.push(cur)
+            }            
+            return acc
+          }, [] as Change[])
+          // @ts-ignore
+          changeSet = new ChangeSet({ ...changeSet.config, doc: tr.doc }, updatedChanges)
+        } else {
+          changeSet = changeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
+        }
         if (!userColors.has(userID)) {
           userColors.set(userID, colorScheme[userColors.size])
         }
-        const changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
         const decorations: Decoration[] = []
         let allDeletionsLength = 0
         let allInsertsLength = 0
-
+        console.log('changed changeset', changeSet)
         changeSet.changes.forEach((change) => {
           let insertFrom = change.fromB
           change.inserted.forEach((span) => {
             const colors = value.userColors.get(span.data.userID)
             const style = `background: ${colors ? colors[0] : ''};`
             decorations.push(Decoration.inline(insertFrom, change.toB, { style }))
+            console.log(`push insert from ${insertFrom} to ${change.toB}`)
             // @ts-ignore
             insertFrom += span.length
             // @ts-ignore
@@ -78,19 +101,21 @@ export const trackChangesPlugin = () =>
                 marks: [oldState.schema.marks.strikethrough.create()],
               })
             )
+            console.log(`push delete at ${start + allDeletionsLength + allInsertsLength} ${content}`)
             // @ts-ignore
             allDeletionsLength -= span.length
             // @ts-ignore
             deletionsLength += span.length
           })
         })
-
-        return {
+        const val = {
           changeSet,
           decorationSet: DecorationSet.create(tr.doc, decorations),
           userColors,
           userID,
         }
+        console.log('decorations', val.decorationSet)
+        return val
       },
     },
     props: {

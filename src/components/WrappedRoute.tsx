@@ -35,7 +35,7 @@ const MainWrapper = styled.div`
 `
 const MainContainer = styled.main`
   margin: 40px auto 0 auto;
-  max-width: 680px;
+  max-width: 800px;
   padding-bottom: 20px;
   @media only screen and (max-width: 720px) {
     margin: 40px 20px 0 20px;

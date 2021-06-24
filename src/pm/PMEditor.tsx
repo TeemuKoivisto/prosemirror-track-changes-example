@@ -1,10 +1,12 @@
-import React, { useLayoutEffect, useRef } from 'react'
+import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import { EditorView } from 'prosemirror-view'
 import { EditorState, Transaction } from 'prosemirror-state'
 import { exampleSetup } from 'prosemirror-example-setup'
 
 import { schema } from './schema'
 import { trackChangesPlugin } from './track-changes-plugin'
+
+import { useEditorContext } from './EditorContext'
 
 import './editor.css'
 import './prosemirror-example-setup.css'
@@ -20,12 +22,14 @@ export function PMEditor(props: EditorProps) {
   const { className = '' } = props
   const editorViewRef = useRef(null)
   const editorRef = useRef<EditorView | null>(null)
+  const ctx = useEditorContext()
 
   useLayoutEffect(() => {
     const state = createEditorState()
     const editorViewDOM = editorViewRef.current
     if (editorViewDOM) {
       editorRef.current = createEditorView(editorViewDOM, state)
+      ctx.viewProvider.init(editorRef.current)
       props.onEditorReady && props?.onEditorReady(editorRef.current)
     }
     return () => {

@@ -8,4 +8,6 @@
   outline: none;
   padding: 10px;
   white-space: pre-wrap;
+  max-width: 500px;
+  width: 100%;
 }
