@@ -5,7 +5,7 @@ import { Change } from 'prosemirror-changeset'
 import { useEditorContext } from 'pm/EditorContext'
 import { usePluginState } from './usePluginState'
 
-import { TrackChangesState, trackChangesPluginKey } from 'pm/track-changes-plugin'
+import { TrackChangesState, trackChangesPluginKey } from 'pm/track-changes/track-changes-plugin'
 
 interface IProps {
   className?: string

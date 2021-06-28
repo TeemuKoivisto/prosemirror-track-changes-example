@@ -4,7 +4,7 @@ import { EditorState, Transaction } from 'prosemirror-state'
 import { exampleSetup } from 'prosemirror-example-setup'
 
 import { schema } from './schema'
-import { trackChangesPlugin } from './track-changes-plugin'
+import { trackChangesPlugin } from './track-changes/track-changes-plugin'
 
 import { useEditorContext } from './EditorContext'
 
