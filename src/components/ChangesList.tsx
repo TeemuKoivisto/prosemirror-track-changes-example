@@ -5,7 +5,7 @@ import { Change } from 'prosemirror-changeset'
 import { useEditorContext } from 'pm/EditorContext'
 import { usePluginState } from './usePluginState'
 
-import { trackChangesPluginKey } from 'pm/track-changes-plugin'
+import { TrackChangesState, trackChangesPluginKey } from 'pm/track-changes-plugin'
 
 interface IProps {
   className?: string
@@ -14,10 +14,13 @@ interface IProps {
 export function ChangesList(props: IProps) {
   const { className } = props
   const { viewProvider } = useEditorContext()
-  const trackChangesState = usePluginState(trackChangesPluginKey)
+  const trackChangesState: TrackChangesState = usePluginState(trackChangesPluginKey)
 
   function handleRevertChangeClick(idx: number) {
-    viewProvider.view.dispatch(viewProvider.view.state.tr.setMeta('revert-change', idx))
+    const changeSet = trackChangesState.changeSet
+    const change = changeSet.changes[idx]
+    const slice = changeSet.startDoc.slice(change.fromA, change.toA)
+    viewProvider.view.dispatch(viewProvider.view.state.tr.replaceWith(change.fromB, change.toB, slice.content))
   }
 
   return (
