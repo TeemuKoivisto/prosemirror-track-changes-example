@@ -10,7 +10,8 @@ export type TrackedChangeType = 'insert' | 'delete' | 'insert+delete'
 export interface TrackedChange {
   type: TrackedChangeType
   timeStr: string
-  content: string
+  inserted?: string
+  deleted?: string
   author: {
     name: string
   }

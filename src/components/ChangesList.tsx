@@ -16,7 +16,11 @@ export function ChangesList(props: IProps) {
   const { viewProvider } = useEditorContext()
   const trackChangesState: TrackChangesState = usePluginState(trackChangesPluginKey)
 
-  function handleRevertChangeClick(idx: number) {
+  function handleAcceptChange(idx: number) {
+    viewProvider.view.dispatch(viewProvider.view.state.tr.setMeta('accept-change', idx))
+  }
+
+  function handleRejectChange(idx: number) {
     const changeSet = trackChangesState.changeSet
     const change = changeSet.changes[idx]
     const slice = changeSet.startDoc.slice(change.fromA, change.toA)
@@ -31,11 +35,14 @@ export function ChangesList(props: IProps) {
       >
         <TitleWrapper>
           <h4>{ c.deleted.length > 0 ? c.inserted.length > 0 ? 'Insertion + Deletion' : 'Deletion' : 'Insertion'}</h4>
-          <RevertBtn
-            onClick={() => handleRevertChangeClick(i)}
-          >
-            Revert
-          </RevertBtn>
+          <Buttons>
+            <button onClick={() => handleAcceptChange(i)}>
+              Accept
+            </button>
+            <button onClick={() => handleRejectChange(i)}>
+              Reject
+            </button>
+          </Buttons>
         </TitleWrapper>
         <Ranges>
           <span className="msg">fromA: {c.fromA}</span>
@@ -61,14 +68,19 @@ const List = styled.ul`
 const CommitItem = styled.li`
 `
 const TitleWrapper = styled.div`
+  align-items: center;
   display: flex;
   justify-content: space-between;
   & > h4 {
     margin: 0;
     margin-right: 1rem;
   }
-  & > button {
-    margin-right: 0.5rem;
+`
+const Buttons = styled.div`
+  display: flex;
+  margin: 0.25rem 0;
+  button + button {
+    margin-left: 0.5rem;
   }
 `
 const Ranges = styled.div`
@@ -77,7 +89,4 @@ const Ranges = styled.div`
   & > .msg {
     margin-right: 1rem;
   }
-`
-const RevertBtn = styled.button<{ active?: boolean }>`
-  background: ${({ active }) => active && 'pink'};
 `

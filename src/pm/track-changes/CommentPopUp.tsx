@@ -30,7 +30,7 @@ interface Props {
 }
 
 function CommentPopUp(props: Props) {
-  const { change, comments, onClose, onAccept, onReject, onSubmitReply} = props
+  const { change, comments, onClose, onAccept, onReject, onSubmitReply } = props
   const [reply, setReply] = useState('')
   function handleKeyPress(e: React.KeyboardEvent) {
 
@@ -46,10 +46,8 @@ function CommentPopUp(props: Props) {
             <Name>{change.author.name}</Name>
             <Time>{change.timeStr}</Time>
           </UserInfo>
-          <div>
-            <ChangeType>{change.type}</ChangeType>
-            <div>"{change.content}"</div>
-          </div>
+          { change.inserted && <div>inserted: "{change.inserted}"</div>}
+          { change.deleted && <div>deleted: "{change.deleted}"</div>}
         </Item>
         { comments.map(c =>          
         <Item key={c.id}>
@@ -118,9 +116,6 @@ const Name = styled.div`
   margin-right: 1rem;
 `
 const Time = styled.time``
-const ChangeType = styled.div`
-  margin-right: 1rem;
-`
 const ReplyInput = styled.input`
   background: #e4e4e4;
   border: 0;

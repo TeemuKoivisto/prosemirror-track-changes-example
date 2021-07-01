@@ -1,6 +1,5 @@
-import { EditorView } from 'prosemirror-view'
+import { EditorView, Decoration, DecorationSet } from 'prosemirror-view'
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state'
-import { Decoration, DecorationSet } from 'prosemirror-view'
 import { Change, ChangeSet } from 'prosemirror-changeset'
 
 import { renderCommentPopUp } from './CommentPopUp'
@@ -59,27 +58,24 @@ export const trackChangesPlugin = () => {
         }
         const { changeSet: oldChangeSet, userColors, userID } = value
         let changeSet: ChangeSet
-        if (tr.getMeta('accept-change')) {
-          const changeIndex = Number(tr.getMeta('accept-change'))
-          const change = oldChangeSet.changes[changeIndex]
-          const slice = oldState.doc.slice(change.fromB, change.toB)
+        const changeIndex = Number(tr.getMeta('accept-change'))
+        if (!Number.isNaN(changeIndex)) {
+          const acceptedChange = oldChangeSet.changes[changeIndex]
+          const slice = oldState.doc.slice(acceptedChange.fromB, acceptedChange.toB)
           let startState = EditorState.create({
             schema: oldState.schema,
             doc: oldChangeSet.startDoc,
           })
-          startState = startState.apply(startState.tr.replaceWith(change.fromA, change.toA, slice.content))
-          // TODO The changes after the accepted change should be updated
-          // const beforeChanges = oldChangeSet.changes.slice(0, changeIndex)
-          // const afterChanges = oldChangeSet.changes.slice(changeIndex + 1).map(c => {
-          //   return c
-          //   // const fromA = c.fromA
-          //   // const toA = c.toA
-          //   // // const fromA = c.fromA - change.lenA + change.lenB
-          //   // // const toA = c.toA - change.lenA + change.lenB
-          //   // return new Change(fromA, toA, change.fromB, change.toB, change.deleted, change.inserted)
-          // })
-          // const changes = [...beforeChanges, ...afterChanges]
-          const changes = oldChangeSet.changes.filter((_, i) => i !== changeIndex)
+          startState = startState.apply(startState.tr.replaceWith(acceptedChange.fromA, acceptedChange.toA, slice.content))
+          // The changes before the accepted change stay as previously, only the changes afterwards must be updated
+          // to account for the changed startDoc
+          const beforeChanges = oldChangeSet.changes.slice(0, changeIndex)
+          const afterChanges = oldChangeSet.changes.slice(changeIndex + 1).map(c => {
+            const fromA = c.fromA - acceptedChange.lenA + slice.content.size
+            const toA = c.toA - acceptedChange.lenA + slice.content.size
+            return new Change(fromA, toA, c.fromB, c.toB, c.deleted, c.inserted)
+          })
+          const changes = [...beforeChanges, ...afterChanges]
           // @ts-ignore
           changeSet = new ChangeSet({ ...oldChangeSet.config, doc: startState.doc }, changes)
         } else {
@@ -95,13 +91,14 @@ export const trackChangesPlugin = () => {
 
         changeSet.changes.forEach((change, index) => {
           let insertFrom = change.fromB
-          const { inserted, deleted } = change        
+          const { inserted, deleted } = change
+          const changeType = change.deleted.length > 0 ? change.inserted.length > 0 ? 'insert+delete' : 'delete' : 'insert'
           inserted.forEach((span) => {
             const colors = value.userColors.get(span.data.userID)
             const style = `background: ${colors ? colors[0] : ''};`
             decorations.push(Decoration.inline(insertFrom, change.toB, {
               style,
-              'data-change-type': 'insert',
+              'data-change-type': changeType,
               'data-change-index': index.toString(),
             }))
             // @ts-ignore
@@ -119,7 +116,7 @@ export const trackChangesPlugin = () => {
             const style = `background: ${colors ? colors[1] : ''};`
             const attrs = {
               style,
-              'data-change-type': 'delete',
+              'data-change-type': changeType,
               'data-change-index': index.toString(),
             }
             decorations.push(
@@ -156,13 +153,17 @@ export const trackChangesPlugin = () => {
           const changeIndex = Number(dataChangeIndex)
           const change = changeSet.changes[changeIndex]
           const changeType = dataChangeType as TrackedChangeType
-          const content = changeType === 'insert' ? view.state.doc.textBetween(change.fromB, change.toB)
-            : changeSet.startDoc.textBetween(change.fromA, change.toA)
+          const inserted = (changeType === 'insert' || changeType === 'insert+delete') ?
+            view.state.doc.textBetween(change.fromB, change.toB) : undefined
+          const deleted = (changeType === 'delete' || changeType === 'insert+delete') ?
+            changeSet.startDoc.textBetween(change.fromA, change.toA) : undefined
+
           const props = {
             change: {
               type: changeType,
               timeStr: '02-13-2019 11:20AM',
-              content,
+              inserted,
+              deleted,
               author: {
                 name: 'John Doe'
               }
