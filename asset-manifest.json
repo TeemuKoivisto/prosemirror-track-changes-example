@@ -1,24 +1,24 @@
 {
   "files": {
     "main.css": "/prosemirror-track-changes-example/static/css/main.73cea216.chunk.css",
-    "main.js": "/prosemirror-track-changes-example/static/js/main.cfc83fa2.chunk.js",
-    "main.js.map": "/prosemirror-track-changes-example/static/js/main.cfc83fa2.chunk.js.map",
-    "runtime-main.js": "/prosemirror-track-changes-example/static/js/runtime-main.704e1418.js",
-    "runtime-main.js.map": "/prosemirror-track-changes-example/static/js/runtime-main.704e1418.js.map",
-    "static/js/2.9c002535.chunk.js": "/prosemirror-track-changes-example/static/js/2.9c002535.chunk.js",
-    "static/js/2.9c002535.chunk.js.map": "/prosemirror-track-changes-example/static/js/2.9c002535.chunk.js.map",
-    "static/js/3.f2f786a3.chunk.js": "/prosemirror-track-changes-example/static/js/3.f2f786a3.chunk.js",
-    "static/js/3.f2f786a3.chunk.js.map": "/prosemirror-track-changes-example/static/js/3.f2f786a3.chunk.js.map",
-    "static/js/4.2f0c14bb.chunk.js": "/prosemirror-track-changes-example/static/js/4.2f0c14bb.chunk.js",
-    "static/js/4.2f0c14bb.chunk.js.map": "/prosemirror-track-changes-example/static/js/4.2f0c14bb.chunk.js.map",
+    "main.js": "/prosemirror-track-changes-example/static/js/main.01e56293.chunk.js",
+    "main.js.map": "/prosemirror-track-changes-example/static/js/main.01e56293.chunk.js.map",
+    "runtime-main.js": "/prosemirror-track-changes-example/static/js/runtime-main.0335829b.js",
+    "runtime-main.js.map": "/prosemirror-track-changes-example/static/js/runtime-main.0335829b.js.map",
+    "static/js/2.8b834b86.chunk.js": "/prosemirror-track-changes-example/static/js/2.8b834b86.chunk.js",
+    "static/js/2.8b834b86.chunk.js.map": "/prosemirror-track-changes-example/static/js/2.8b834b86.chunk.js.map",
+    "static/js/3.faf05ea0.chunk.js": "/prosemirror-track-changes-example/static/js/3.faf05ea0.chunk.js",
+    "static/js/3.faf05ea0.chunk.js.map": "/prosemirror-track-changes-example/static/js/3.faf05ea0.chunk.js.map",
+    "static/js/4.bc464492.chunk.js": "/prosemirror-track-changes-example/static/js/4.bc464492.chunk.js",
+    "static/js/4.bc464492.chunk.js.map": "/prosemirror-track-changes-example/static/js/4.bc464492.chunk.js.map",
     "index.html": "/prosemirror-track-changes-example/index.html",
     "static/css/main.73cea216.chunk.css.map": "/prosemirror-track-changes-example/static/css/main.73cea216.chunk.css.map",
-    "static/js/2.9c002535.chunk.js.LICENSE.txt": "/prosemirror-track-changes-example/static/js/2.9c002535.chunk.js.LICENSE.txt"
+    "static/js/2.8b834b86.chunk.js.LICENSE.txt": "/prosemirror-track-changes-example/static/js/2.8b834b86.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.704e1418.js",
-    "static/js/2.9c002535.chunk.js",
+    "static/js/runtime-main.0335829b.js",
+    "static/js/2.8b834b86.chunk.js",
     "static/css/main.73cea216.chunk.css",
-    "static/js/main.cfc83fa2.chunk.js"
+    "static/js/main.01e56293.chunk.js"
   ]
 }
