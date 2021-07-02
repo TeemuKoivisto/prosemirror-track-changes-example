@@ -12,12 +12,22 @@ export class EditorViewProvider {
 
   get view(): EditorView<ExampleSchema> {
     if (!this._view) {
-      throw Error('EditorViewProvider editorView accessed without editorView instance')
+      throw Error('EditorViewProvider view accessed without EditorView instance')
     }
     return this._view
   }
 
   execCommand(cmd: Command) {
     cmd(this.view.state, this.view.dispatch)
+    this.focus()
+  }
+
+  focus() {
+    if (!this._view || this._view.hasFocus()) {
+      return false
+    }
+    this._view.focus()
+    this._view.dispatch(this._view.state.tr.scrollIntoView())
+    return true
   }
 }

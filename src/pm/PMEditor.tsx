@@ -4,6 +4,7 @@ import { EditorState, Transaction } from 'prosemirror-state'
 import { exampleSetup } from 'prosemirror-example-setup'
 
 import { schema } from './schema'
+import { activeNodesMarksPlugin } from './active-nodes-marks'
 import { trackChangesPlugin } from './track-changes/track-changes-plugin'
 
 import { useEditorContext } from './EditorContext'
@@ -41,6 +42,7 @@ export function PMEditor(props: EditorProps) {
     return EditorState.create({
       schema,
       plugins: exampleSetup({ schema }).concat(
+        activeNodesMarksPlugin(),
         trackChangesPlugin(),
       ),
     })
@@ -60,8 +62,10 @@ export function PMEditor(props: EditorProps) {
     if (!editorRef.current) {
       return
     }
-    const editorState = editorRef.current.state.apply(transaction)
+    const oldEditorState = editorRef.current.state
+    const editorState = oldEditorState.apply(transaction)
     editorRef.current.updateState(editorState)
+    ctx.pluginStateProvider.updatePluginListeners(oldEditorState, editorState)
     if (props.onEdit) {
       props.onEdit(editorState)
     }

@@ -5,6 +5,7 @@ import debounce from 'lodash.debounce'
 import { EditorView } from 'prosemirror-view'
 import { applyDevTools } from 'prosemirror-dev-tools'
 
+import { Toolbar } from './Toolbar'
 import { SelectUser } from './SelectUser'
 import { ChangesList } from './ChangesList'
 
@@ -28,10 +29,13 @@ export function Editor() {
     <ReactEditorContext.Provider value={createDefaultProviders()}>
       <SelectUser/>
       <EditorWrapper>
-        <PMEditor
-          onEdit={handleEdit}
-          onEditorReady={handleEditorReady}
-        />
+        <div>
+          <Toolbar />
+          <PMEditor
+            onEdit={handleEdit}
+            onEditorReady={handleEditorReady}
+          />
+        </div>
         <ChangesList className="changes-list"/>
       </EditorWrapper>
     </ReactEditorContext.Provider>
@@ -40,6 +44,7 @@ export function Editor() {
 
 const EditorWrapper = styled.div`
   display: flex;
+  margin-top: 1rem;
   width: 100%;
   .changes-list {
     margin-left: 1rem;
