@@ -8,6 +8,7 @@ import { applyDevTools } from 'prosemirror-dev-tools'
 import { Toolbar } from './Toolbar'
 import { SelectUser } from './SelectUser'
 import { ChangesList } from './ChangesList'
+import { injectTrackChanges } from './track-changes-panel'
 
 import { PMEditor } from 'pm/PMEditor'
 import { EditorStore } from './EditorStore'
@@ -24,6 +25,7 @@ export function Editor() {
   function handleEditorReady(view: EditorView) {
     editorStore.setEditorView(view)
     applyDevTools(view)
+    injectTrackChanges(view)
   }
   return (
     <ReactEditorContext.Provider value={createDefaultProviders()}>

@@ -98,7 +98,7 @@ const IconItem = styled.li`
 const IconButton = styled.button`
   align-items: center;
   background: transparent;
-  border: 1px solid transparent;
+  border: 0;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
