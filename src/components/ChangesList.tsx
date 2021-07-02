@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 // import { Change } from 'prosemirror-changeset'
-import { Change } from 'custom-change-set/change'
+import { Change } from 'custom-changeset'
 
 import { useEditorContext } from 'pm/EditorContext'
 import { usePluginState } from './usePluginState'

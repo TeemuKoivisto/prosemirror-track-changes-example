@@ -1,7 +1,8 @@
 /* eslint-disable */
 
 import { Fragment, Node as PMNode } from "prosemirror-model"
-import {Span, Change} from "./change"
+import {Change} from "./change"
+import {Span} from "./span"
 
 let letter: RegExp | undefined
 // If the runtime support unicode properties in regexps, that's a good

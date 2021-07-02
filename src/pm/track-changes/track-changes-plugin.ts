@@ -1,7 +1,7 @@
 import { EditorView, Decoration, DecorationSet } from 'prosemirror-view'
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state'
 // import { Change, ChangeSet } from 'prosemirror-changeset'
-import { Change, ChangeSet } from 'custom-change-set/changeset'
+import { Change, ChangeSet } from 'custom-changeset'
 
 import { renderCommentPopUp } from './CommentPopUp'
 

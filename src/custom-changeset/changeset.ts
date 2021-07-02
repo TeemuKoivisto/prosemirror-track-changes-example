@@ -1,12 +1,11 @@
 /* eslint-disable */
 
 import {computeDiff} from "./diff"
-import {Change, Span} from "./change"
-import { Fragment, Node as PMNode } from "prosemirror-model"
-import { StepMap } from "prosemirror-transform"
+import {Change} from "./change"
+import {Span} from "./span"
 
-export {Change, Span}
-export {simplifyChanges} from "./simplify"
+import { Node as PMNode } from "prosemirror-model"
+import { StepMap } from "prosemirror-transform"
 
 interface ChangeSetConfig {
   doc: PMNode
