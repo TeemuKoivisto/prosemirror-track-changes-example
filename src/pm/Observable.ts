@@ -22,6 +22,7 @@ export class Observable<K = string> {
       }
     }
   }
+
   emit(key: K, ...args: any[]) {
     // TODO the typing of this annoying thing
     // @ts-ignore

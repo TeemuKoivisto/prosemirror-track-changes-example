@@ -8,7 +8,7 @@ import {
 import { GrBlockQuote } from 'react-icons/gr'
 
 import { useEditorContext } from 'pm/EditorContext'
-import { usePluginStateProvider } from './usePluginStateProvider'
+import { usePluginState } from './usePluginState'
 import { activeNodesMarksPluginKey, ActiveNodesMarksState } from 'pm/active-nodes-marks'
 
 type IconType = 'bold' | 'italic' | 'toggle-blockquote'
@@ -39,7 +39,7 @@ const commandIcons: {
 
 export function Toolbar() {
   const { viewProvider } = useEditorContext()
-  const activeNodesMarksPlugin = usePluginStateProvider<ActiveNodesMarksState>(activeNodesMarksPluginKey)
+  const activeNodesMarksPlugin = usePluginState<ActiveNodesMarksState>(activeNodesMarksPluginKey)
 
   function handleIconClick(title: IconType) {
     switch (title) {

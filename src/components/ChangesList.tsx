@@ -15,13 +15,14 @@ interface IProps {
 export function ChangesList(props: IProps) {
   const { className } = props
   const { viewProvider } = useEditorContext()
-  const trackChangesState: TrackChangesState = usePluginState(trackChangesPluginKey)
+  const trackChangesState = usePluginState<TrackChangesState>(trackChangesPluginKey)
 
   function handleAcceptChange(idx: number) {
     viewProvider.view.dispatch(viewProvider.view.state.tr.setMeta('accept-change', idx))
   }
 
   function handleRejectChange(idx: number) {
+    if (!trackChangesState) return
     const changeSet = trackChangesState.changeSet
     const change = changeSet.changes[idx]
     const slice = changeSet.startDoc.slice(change.fromA, change.toA)
