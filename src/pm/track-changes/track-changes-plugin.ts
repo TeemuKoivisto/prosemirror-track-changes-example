@@ -1,10 +1,12 @@
-import { EditorView, Decoration, DecorationSet } from 'prosemirror-view'
+import { DecorationSet } from 'prosemirror-view'
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state'
 import { DOMSerializer } from 'prosemirror-model'
 // import { Change, ChangeSet } from 'prosemirror-changeset'
 import { Change, ChangeSet } from 'custom-changeset'
 
+import { acceptChange } from './acceptChange' 
 import { renderCommentPopUp } from './CommentPopUp'
+import { renderDecorations } from './renderDecorations'
 
 import { ExampleSchema } from '../schema'
 import { TrackedChangeType } from './types'
@@ -24,15 +26,6 @@ const colorScheme: [string, string][] = [
   ['#10c727', '#ff0707'],
   ['#7adcb8', '#f93aa2']
 ]
-
-const deletedWidget = (html: DocumentFragment, attrs: {[key: string]: string}) => (view: EditorView, getPos: () => number) => {
-  const element = document.createElement('span')
-  element.appendChild(html)
-  Object.keys(attrs).forEach((key) => {
-    element.setAttribute(key, attrs[key])
-  })
-  return element
-}
 
 export const trackChangesPlugin = () => {
 
@@ -67,20 +60,7 @@ export const trackChangesPlugin = () => {
         let startState = oldStartState
         const changeIndex = Number(tr.getMeta('accept-change'))
         if (!Number.isNaN(changeIndex)) {
-          const acceptedChange = oldChangeSet.changes[changeIndex]
-          const slice = oldState.doc.slice(acceptedChange.fromB, acceptedChange.toB)
-          startState = startState.apply(startState.tr.replaceWith(acceptedChange.fromA, acceptedChange.toA, slice.content))
-          // The changes before the accepted change stay as previously, only the changes afterwards must be updated
-          // to account for the changed startDoc
-          const beforeChanges = oldChangeSet.changes.slice(0, changeIndex)
-          const afterChanges = oldChangeSet.changes.slice(changeIndex + 1).map(c => {
-            const fromA = c.fromA - acceptedChange.lenA + slice.content.size
-            const toA = c.toA - acceptedChange.lenA + slice.content.size
-            return new Change(fromA, toA, c.fromB, c.toB, c.deleted, c.inserted)
-          })
-          const changes = [...beforeChanges, ...afterChanges]
-          // @ts-ignore
-          changeSet = new ChangeSet({ ...oldChangeSet.config, doc: startState.doc }, changes)
+          changeSet = acceptChange(changeIndex, oldChangeSet, startState, oldState)
         } else {
           // changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
           changeSet = oldChangeSet.addSteps2(tr.doc, tr.steps, { userID })
@@ -89,53 +69,7 @@ export const trackChangesPlugin = () => {
         if (!userColors.has(userID)) {
           userColors.set(userID, colorScheme[userColors.size])
         }
-        const decorations: Decoration[] = []
-        let allDeletionsLength = 0
-        let allInsertsLength = 0
-
-        changeSet.changes.forEach((change, index) => {
-          let insertFrom = change.fromB
-          const { inserted, deleted } = change
-          const changeType = change.deleted.length > 0 ? change.inserted.length > 0 ? 'insert+delete' : 'delete' : 'insert'
-          inserted.forEach((span) => {
-            const colors = value.userColors.get(span.data.userID)
-            const style = `background: ${colors ? colors[0] : ''};`
-            decorations.push(Decoration.inline(insertFrom, change.toB, {
-              style,
-              'data-change-type': changeType,
-              'data-change-index': index.toString(),
-            }))
-            // @ts-ignore
-            insertFrom += span.length
-            // @ts-ignore
-            allInsertsLength += span.length
-          })
-
-          let deletionsLength = 0
-          deleted.forEach((span) => {
-            const start = change.fromA + deletionsLength
-            // @ts-ignore
-            const content = startState.doc.slice(start, start + span.length)
-            const html = domSerializer.serializeFragment(content.content)
-            const colors = value.userColors.get(span.data.userID)
-            const style = `background: ${colors ? colors[1] : ''};`
-            const attrs = {
-              style,
-              'data-change-type': changeType,
-              'data-change-index': index.toString(),
-            }
-            decorations.push(
-              Decoration.widget(start + allDeletionsLength + allInsertsLength, deletedWidget(html, attrs), {
-                side: 0,
-                marks: [oldState.schema.marks.strikethrough.create()],
-              })
-            )
-            // @ts-ignore
-            allDeletionsLength -= span.length
-            // @ts-ignore
-            deletionsLength += span.length
-          })
-        })
+        const decorations = renderDecorations(changeSet, userColors, domSerializer, startState)
         return {
           startState,
           changeSet,
