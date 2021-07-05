@@ -11,6 +11,7 @@ export type Nodes =
   | 'image'
   | 'paragraph'
   | 'text'
+
 export type ExampleSchema = Schema<Nodes, Marks>
 
 export const schema: ExampleSchema = new Schema<Nodes, Marks>({

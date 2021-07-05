@@ -5,7 +5,7 @@ import {Change} from "./change"
 import {Span} from "./span"
 
 import { Node as PMNode } from "prosemirror-model"
-import { StepMap } from "prosemirror-transform"
+import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep, Step, StepMap } from "prosemirror-transform"
 
 interface ChangeSetConfig {
   doc: PMNode
@@ -27,6 +27,83 @@ export class ChangeSet {
     this.changes = changes
   }
 
+  addSteps2(newDoc: PMNode, steps: Step[], data?: any | any[]) {
+    let stepChanges: Change[] = []
+    // Add spans for new steps.
+    let off = 0
+    for (let i = 0; i < steps.length; i++) {
+      const step = steps[i]
+      let d = Array.isArray(data) ? data[i] : data
+
+      if (step instanceof ReplaceStep) {
+        console.log('replace step', step)
+        // @ts-ignore
+        const fromA = step.from
+        // @ts-ignore
+        const toA = step.to
+        // @ts-ignore
+        const fromB = step.from
+        // @ts-ignore
+        const toB = step.from + step.slice.size
+        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
+            fromA == toA ? Span.none : [new Span(toA - fromA, d)],
+            fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
+        off = (toB - fromB) - (toA - fromA)
+        console.log('new change', stepChanges[stepChanges.length - 1])
+      } else if (step instanceof ReplaceAroundStep) {
+        console.log('replace around step', step)
+      } else if (step instanceof AddMarkStep) {
+        console.log('add mark step', step)
+        // @ts-ignore
+        const fromA = step.from
+        // @ts-ignore
+        const toA = step.to
+        // @ts-ignore
+        const fromB = step.from
+        // @ts-ignore
+        const toB = step.from
+        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
+            fromA == toA ? Span.none : [new Span(toA - fromA, d)],
+            fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
+        off = (toB - fromB) - (toA - fromA)
+        console.log('new change', stepChanges[stepChanges.length - 1])
+
+      } else if (step instanceof RemoveMarkStep) {
+        console.log('remove mark step', step)
+        // hmm
+      } else {
+        console.error('Unknown step type! Change not tracked and possibly current changes have become inconsistent', step)
+      }
+
+    }
+    if (stepChanges.length == 0) return this
+
+    let newChanges = mergeAll(stepChanges, this.config.combine)
+    let changes = Change.merge(this.changes, newChanges, this.config.combine)
+
+    // Minimize changes when possible
+    for (let i = 0; i < changes.length; i++) {
+      let change = changes[i]
+      if (change.fromA == change.toA || change.fromB == change.toB ||
+          // Only look at changes that touch newly added changed ranges
+          !newChanges.some(r => r.toB > change.fromB && r.fromB < change.toB)) continue
+      let diff = computeDiff(this.config.doc.content, newDoc.content, change)
+
+      // Fast path: If they are completely different, don't do anything
+      if (diff.length == 1 && diff[0].fromB == 0 && diff[0].toB == change.toB - change.fromB)
+        continue
+
+      if (diff.length == 1) {
+        changes[i] = diff[0]
+      } else {
+        changes.splice(i, 1, ...diff)
+        i += diff.length - 1
+      }
+    }
+
+    return new ChangeSet(this.config, changes)
+  }
+
   // :: (Node, [StepMap], union<[any], any>) → ChangeSet
   // Computes a new changeset by adding the given step maps and
   // metadata (either as an array, per-map, or as a single value to be
@@ -38,7 +115,7 @@ export class ChangeSet {
   // than adding all those changes at once, since different document
   // tokens might be matched during simplification depending on the
   // boundaries of the current changed ranges.
-  addSteps(newDoc: PMNode, maps: StepMap[], data?: any) {
+  addSteps(newDoc: PMNode, maps: StepMap[], data?: any | any[]) {
     // This works by inspecting the position maps for the changes,
     // which indicate what parts of the document were replaced by new
     // content, and the size of that new content. It uses these to
@@ -59,7 +136,7 @@ export class ChangeSet {
       let d = Array.isArray(data) ? data[i] : data
       let off = 0
       maps[i].forEach((fromA: number, toA: number, fromB: number, toB: number) => {
-
+        console.log(`changed ${fromA} ${toA} ${fromB} ${toB}`)
         stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
                                     fromA == toA ? Span.none : [new Span(toA - fromA, d)],
                                     fromB == toB ? Span.none : [new Span(toB - fromB, d)]))

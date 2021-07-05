@@ -80,7 +80,8 @@ export const trackChangesPlugin = () => {
           // @ts-ignore
           changeSet = new ChangeSet({ ...oldChangeSet.config, doc: startState.doc }, changes)
         } else {
-          changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
+          // changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
+          changeSet = oldChangeSet.addSteps2(tr.doc, tr.steps, { userID })
         }
 
         if (!userColors.has(userID)) {
