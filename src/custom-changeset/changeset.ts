@@ -38,13 +38,11 @@ export class ChangeSet {
       if (step instanceof ReplaceStep) {
         console.log('replace step', step)
         // @ts-ignore
-        const fromA = step.from
-        // @ts-ignore
-        const toA = step.to
-        // @ts-ignore
-        const fromB = step.from
-        // @ts-ignore
-        const toB = step.from + step.slice.size
+        const { from, to, slice } = step
+        const fromA = from
+        const toA = to
+        const fromB = from
+        const toB = from + slice.size
         stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
             fromA == toA ? Span.none : [new Span(toA - fromA, d)],
             fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
@@ -55,13 +53,11 @@ export class ChangeSet {
       } else if (step instanceof AddMarkStep) {
         console.log('add mark step', step)
         // @ts-ignore
-        const fromA = step.from
-        // @ts-ignore
-        const toA = step.to
-        // @ts-ignore
-        const fromB = step.from
-        // @ts-ignore
-        const toB = step.from
+        const { from, to, mark } = step
+        const fromA = from
+        const toA = from
+        const fromB = from
+        const toB = to
         stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
             fromA == toA ? Span.none : [new Span(toA - fromA, d)],
             fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
@@ -70,7 +66,18 @@ export class ChangeSet {
 
       } else if (step instanceof RemoveMarkStep) {
         console.log('remove mark step', step)
-        // hmm
+        // @ts-ignore
+        const { from, to, mark } = step
+        const fromA = from
+        const toA = to
+        const fromB = from
+        const toB = from
+        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
+            fromA == toA ? Span.none : [new Span(toA - fromA, d)],
+            fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
+        off = (toB - fromB) - (toA - fromA)
+        console.log('new change', stepChanges[stepChanges.length - 1])
+  
       } else {
         console.error('Unknown step type! Change not tracked and possibly current changes have become inconsistent', step)
       }
