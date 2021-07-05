@@ -1,5 +1,6 @@
 import { EditorView, Decoration, DecorationSet } from 'prosemirror-view'
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state'
+import { DOMSerializer } from 'prosemirror-model'
 // import { Change, ChangeSet } from 'prosemirror-changeset'
 import { Change, ChangeSet } from 'custom-changeset'
 
@@ -9,6 +10,7 @@ import { ExampleSchema } from '../schema'
 import { TrackedChangeType } from './types'
 
 export interface TrackChangesState {
+  startState: EditorState
   changeSet: ChangeSet
   decorationSet: DecorationSet<ExampleSchema>
   userColors: Map<string, [string, string]>
@@ -23,9 +25,9 @@ const colorScheme: [string, string][] = [
   ['#7adcb8', '#f93aa2']
 ]
 
-const deletedWidget = (content: string, attrs: {[key: string]: string}) => (view: EditorView, getPos: () => number) => {
+const deletedWidget = (html: DocumentFragment, attrs: {[key: string]: string}) => (view: EditorView, getPos: () => number) => {
   const element = document.createElement('span')
-  element.textContent = content
+  element.appendChild(html)
   Object.keys(attrs).forEach((key) => {
     element.setAttribute(key, attrs[key])
   })
@@ -40,12 +42,15 @@ export const trackChangesPlugin = () => {
   let renderedPopper: {
     destroy: () => void
   } | undefined
+  let domSerializer: DOMSerializer<ExampleSchema>
 
   return new Plugin<TrackChangesState, ExampleSchema>({
     key: trackChangesPluginKey,
     state: {
       init(config, state) {
+        domSerializer = state.schema.cached?.domSerializer || DOMSerializer.fromSchema(state.schema)
         return {
+          startState: state,
           changeSet: ChangeSet.create(state.doc),
           decorationSet: DecorationSet.empty,
           userColors: new Map(),
@@ -57,16 +62,13 @@ export const trackChangesPlugin = () => {
         if (tr.getMeta('set-userID')) {
           return { ...value, userID: tr.getMeta('set-userID') }
         }
-        const { changeSet: oldChangeSet, userColors, userID } = value
+        const { changeSet: oldChangeSet, startState: oldStartState, userColors, userID } = value
         let changeSet: ChangeSet
+        let startState = oldStartState
         const changeIndex = Number(tr.getMeta('accept-change'))
         if (!Number.isNaN(changeIndex)) {
           const acceptedChange = oldChangeSet.changes[changeIndex]
           const slice = oldState.doc.slice(acceptedChange.fromB, acceptedChange.toB)
-          let startState = EditorState.create({
-            schema: oldState.schema,
-            doc: oldChangeSet.startDoc,
-          })
           startState = startState.apply(startState.tr.replaceWith(acceptedChange.fromA, acceptedChange.toA, slice.content))
           // The changes before the accepted change stay as previously, only the changes afterwards must be updated
           // to account for the changed startDoc
@@ -113,7 +115,8 @@ export const trackChangesPlugin = () => {
           deleted.forEach((span) => {
             const start = change.fromA + deletionsLength
             // @ts-ignore
-            const content = changeSet.startDoc.textBetween(start, start + span.length)
+            const content = startState.doc.slice(start, start + span.length)
+            const html = domSerializer.serializeFragment(content.content)
             const colors = value.userColors.get(span.data.userID)
             const style = `background: ${colors ? colors[1] : ''};`
             const attrs = {
@@ -122,7 +125,7 @@ export const trackChangesPlugin = () => {
               'data-change-index': index.toString(),
             }
             decorations.push(
-              Decoration.widget(start + allDeletionsLength + allInsertsLength, deletedWidget(content, attrs), {
+              Decoration.widget(start + allDeletionsLength + allInsertsLength, deletedWidget(html, attrs), {
                 side: 0,
                 marks: [oldState.schema.marks.strikethrough.create()],
               })
@@ -134,6 +137,7 @@ export const trackChangesPlugin = () => {
           })
         })
         return {
+          startState,
           changeSet,
           decorationSet: DecorationSet.create(tr.doc, decorations),
           userColors,
