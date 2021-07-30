@@ -24,6 +24,7 @@ export const schema: ExampleSchema = new Schema<Nodes, Marks>({
     // :: NodeSpec A plain paragraph textblock. Represented in the DOM
     // as a `<p>` element.
     paragraph: {
+      attrs: { dataTracked: { default: null } },
       content: 'inline*',
       group: 'block',
       parseDOM: [{ tag: 'p' }],
@@ -34,6 +35,7 @@ export const schema: ExampleSchema = new Schema<Nodes, Marks>({
 
     // :: NodeSpec A blockquote (`<blockquote>`) wrapping one or more blocks.
     blockquote: {
+      attrs: { dataTracked: { default: null } },
       content: 'block+',
       group: 'block',
       defining: true,

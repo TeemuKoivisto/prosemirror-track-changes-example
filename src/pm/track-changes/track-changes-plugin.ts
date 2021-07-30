@@ -62,8 +62,8 @@ export const trackChangesPlugin = () => {
         if (!Number.isNaN(changeIndex)) {
           changeSet = acceptChange(changeIndex, oldChangeSet, startState, oldState)
         } else {
-          // changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
-          changeSet = oldChangeSet.addSteps2(tr.doc, tr.steps, { userID })
+          changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
+          // changeSet = oldChangeSet.addSteps2(tr.doc, tr.steps, { userID })
         }
 
         if (!userColors.has(userID)) {

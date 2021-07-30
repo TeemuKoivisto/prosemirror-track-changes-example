@@ -3,15 +3,16 @@ import styled from 'styled-components'
 import { toggleMark } from 'prosemirror-commands'
 
 import {
-  FiBold, FiItalic
+  FiBold, FiItalic, FiAtSign
 } from 'react-icons/fi'
 import { GrBlockQuote } from 'react-icons/gr'
 
 import { useEditorContext } from 'pm/EditorContext'
 import { usePluginState } from './usePluginState'
 import { activeNodesMarksPluginKey, ActiveNodesMarksState } from 'pm/active-nodes-marks'
+import { setBlockNodeAttribute } from 'pm/commands'
 
-type IconType = 'bold' | 'italic' | 'toggle-blockquote'
+type IconType = 'bold' | 'italic' | 'toggle-blockquote' | 'update-attribute'
 
 const marksIcons: {
   title: IconType
@@ -35,6 +36,10 @@ const commandIcons: {
     title: 'toggle-blockquote',
     icon: <GrBlockQuote size={16}/>
   },
+  {
+    title: 'update-attribute',
+    icon: <FiAtSign size={16} />
+  }
 ]
 
 export function Toolbar() {
@@ -50,6 +55,9 @@ export function Toolbar() {
         viewProvider.execCommand(toggleMark(viewProvider.view.state.schema.marks.italic))
         return
       case 'toggle-blockquote':
+        return
+      case 'update-attribute':
+        viewProvider.execCommand(setBlockNodeAttribute())
         return
     }
   }
