@@ -20,23 +20,27 @@ export function ChangesList(props: IProps) {
   function handleAcceptChange(idx: number) {
     viewProvider.view.dispatch(viewProvider.view.state.tr.setMeta('accept-change', idx))
   }
-
   function handleRejectChange(idx: number) {
-    if (!trackChangesState) return
-    const changeSet = trackChangesState.changeSet
-    const change = changeSet.changes[idx]
-    const slice = changeSet.startDoc.slice(change.fromA, change.toA)
-    viewProvider.view.dispatch(viewProvider.view.state.tr.replaceWith(change.fromB, change.toB, slice.content))
+    viewProvider.view.dispatch(viewProvider.view.state.tr.setMeta('reject-change', idx))
   }
-
+  function changeTitle(c: Change) {
+    if (c.blockChange && c.inserted.length > 0) {
+      return 'Block insert'
+    } else if (c.blockChange && c.deleted.length > 0) {
+      return 'Block delete'
+    }
+    return c.deleted.length > 0 ? c.inserted.length > 0 ? 'Insertion + Deletion' : 'Deletion' : 'Insertion'
+  }
+  // const changes = trackChangesState?.changeSet.changes.filter((c: Change) => c.blockChange !== 'end') || []
+  const changes = trackChangesState?.changeSet.changes || []
   return (
     <List className={className}>
-      { trackChangesState?.changeSet.changes.map((c: Change, i: number) =>
+      { changes.map((c: Change, i: number) =>
       <CommitItem
         key={i}
       >
         <TitleWrapper>
-          <h4>{ c.deleted.length > 0 ? c.inserted.length > 0 ? 'Insertion + Deletion' : 'Deletion' : 'Insertion'}</h4>
+          <h4>{ changeTitle(c) }</h4>
           <Buttons>
             <button onClick={() => handleAcceptChange(i)}>
               Accept

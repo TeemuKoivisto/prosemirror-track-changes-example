@@ -33,6 +33,26 @@ export class Change {
   get lenA() { return this.toA - this.fromA }
   get lenB() { return this.toB - this.fromB }
 
+  get blockChange() {
+    const blockInserted = this.inserted.find(s => s.data?.blockChange)
+    const blockDeleted = this.deleted.find(s => s.data?.blockChange)
+    if (blockInserted) return blockInserted.data.blockChange
+    if (blockDeleted) return blockDeleted.data.blockChange
+    return null
+  }
+  
+  get isBlockChangeStart() {
+    const blockInserted = this.inserted.find(s => s.data?.blockChange)
+    const blockDeleted = this.deleted.find(s => s.data?.blockChange)
+    return blockInserted?.data?.blockChange === 'start' || blockDeleted?.data?.blockChange === 'start'
+  }
+
+  get isBlockChangeEnd() {
+    const blockInserted = this.inserted.find(s => s.data?.blockChange)
+    const blockDeleted = this.deleted.find(s => s.data?.blockChange)
+    return blockInserted?.data?.blockChange === 'end' || blockDeleted?.data?.blockChange === 'end'
+  }
+
   slice(startA: number, endA: number, startB: number, endB: number) {
     if (startA == 0 && startB == 0 && endA == this.toA - this.fromA &&
         endB == this.toB - this.fromB) return this

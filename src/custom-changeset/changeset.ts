@@ -122,7 +122,7 @@ export class ChangeSet {
   // than adding all those changes at once, since different document
   // tokens might be matched during simplification depending on the
   // boundaries of the current changed ranges.
-  addSteps(newDoc: PMNode, maps: StepMap[], data?: any | any[]) {
+  addSteps(newDoc: PMNode, steps: Step[], data?: any | any[]) {
     // This works by inspecting the position maps for the changes,
     // which indicate what parts of the document were replaced by new
     // content, and the size of that new content. It uses these to
@@ -139,11 +139,19 @@ export class ChangeSet {
 
     let stepChanges: Change[] = []
     // Add spans for new steps.
-    for (let i = 0; i < maps.length; i++) {
+    for (let i = 0; i < steps.length; i++) {
       let d = Array.isArray(data) ? data[i] : data
       let off = 0
-      maps[i].forEach((fromA: number, toA: number, fromB: number, toB: number) => {
+      let insideReplaceAroundStep = false
+      steps[i].getMap().forEach((fromA: number, toA: number, fromB: number, toB: number) => {
         console.log(`changed ${fromA} ${toA} ${fromB} ${toB}`)
+        if (steps[i] instanceof ReplaceAroundStep && !insideReplaceAroundStep) {
+          insideReplaceAroundStep = true
+          d = { ...d, blockChange: 'start' }
+        } else if (steps[i] instanceof ReplaceAroundStep && insideReplaceAroundStep) {
+          insideReplaceAroundStep = false
+          d = { ...d, blockChange: 'end' }
+        }
         stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
                                     fromA == toA ? Span.none : [new Span(toA - fromA, d)],
                                     fromB == toB ? Span.none : [new Span(toB - fromB, d)]))

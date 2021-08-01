@@ -4,7 +4,7 @@ import { DOMSerializer } from 'prosemirror-model'
 // import { Change, ChangeSet } from 'prosemirror-changeset'
 import { Change, ChangeSet } from 'custom-changeset'
 
-import { acceptChange } from './acceptChange' 
+import { acceptChange, rejectChange } from './acceptChange' 
 import { renderCommentPopUp } from './CommentPopUp'
 import { renderDecorations } from './renderDecorations'
 
@@ -58,11 +58,11 @@ export const trackChangesPlugin = () => {
         const { changeSet: oldChangeSet, startState: oldStartState, userColors, userID } = value
         let changeSet: ChangeSet
         let startState = oldStartState
-        const changeIndex = Number(tr.getMeta('accept-change'))
-        if (!Number.isNaN(changeIndex)) {
-          changeSet = acceptChange(changeIndex, oldChangeSet, startState, oldState)
+        const acceptedChangeIndex = Number(tr.getMeta('accept-change'))
+        if (!Number.isNaN(acceptedChangeIndex)) {
+          changeSet = acceptChange(acceptedChangeIndex, oldChangeSet, startState, newState)
         } else {
-          changeSet = oldChangeSet.addSteps(tr.doc, tr.mapping.maps, { userID })
+          changeSet = oldChangeSet.addSteps(tr.doc, tr.steps, { userID })
           // changeSet = oldChangeSet.addSteps2(tr.doc, tr.steps, { userID })
         }
 
@@ -78,6 +78,16 @@ export const trackChangesPlugin = () => {
           userID,
         }
       },
+    },
+    appendTransaction(trs, _oldState, newState) {
+      const rejectedChangeTr = trs.find(tr => !Number.isNaN(tr.getMeta('reject-change')))
+      const rejectedChangeIndex = Number(rejectedChangeTr?.getMeta('reject-change'))
+      const trackState = trackChangesPluginKey.getState(newState)
+      if (!Number.isNaN(rejectedChangeIndex) && trackState) {
+        const { changeSet, startState } = trackState
+        return rejectChange(rejectedChangeIndex, changeSet, startState, newState)
+      }
+      return null
     },
     props: {
       decorations(state) {
@@ -117,8 +127,7 @@ export const trackChangesPlugin = () => {
               renderedPopper?.destroy()
             },
             onReject: () => {
-              const slice = changeSet.startDoc.slice(change.fromA, change.toA)
-              view.dispatch(view.state.tr.replaceWith(change.fromB, change.toB, slice.content))
+              view.dispatch(view.state.tr.setMeta('reject-change', changeIndex))
               renderedPopper?.destroy()
             },
             onSubmitReply: (text: string) => {
