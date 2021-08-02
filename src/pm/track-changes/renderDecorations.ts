@@ -29,13 +29,15 @@ export function renderDecorations(
     inserted.forEach((span) => {
       // @ts-ignore
       const spanLength = span.length
-      const colors = userColors.get(span.data.userID)
-      const style = `background: ${colors ? colors[0] : ''};`
-      decorations.push(Decoration.inline(insertFrom, change.toB, {
-        style,
-        'data-change-type': changeType,
-        'data-change-index': index.toString(),
-      }))
+      if (change.isChange()) {
+        const colors = userColors.get(span.data.userID)
+        const style = `background: ${colors ? colors[0] : ''};`
+        decorations.push(Decoration.inline(insertFrom, change.toB, {
+          style,
+          'data-change-type': changeType,
+          'data-change-index': index.toString(),
+        }))
+      }
       insertFrom += spanLength
       allInsertsLength += spanLength
     })
@@ -44,22 +46,24 @@ export function renderDecorations(
     deleted.forEach((span) => {
       // @ts-ignore
       const spanLength = span.length
-      const start = change.fromA + deletionsLength
-      const content = startState.doc.slice(start, start + spanLength)
-      const html = domSerializer.serializeFragment(content.content)
-      const colors = userColors.get(span.data.userID)
-      const style = `background: ${colors ? colors[1] : ''};`
-      const attrs = {
-        style,
-        'data-change-type': changeType,
-        'data-change-index': index.toString(),
+      if (change.isChange()) {
+        const start = change.fromA + deletionsLength
+        const content = startState.doc.slice(start, start + spanLength)
+        const html = domSerializer.serializeFragment(content.content)
+        const colors = userColors.get(span.data.userID)
+        const style = `background: ${colors ? colors[1] : ''};`
+        const attrs = {
+          style,
+          'data-change-type': changeType,
+          'data-change-index': index.toString(),
+        }
+        decorations.push(
+          Decoration.widget(start + allDeletionsLength + allInsertsLength, deletedWidget(html, attrs), {
+            side: 0,
+            marks: [startState.schema.marks.strikethrough.create()],
+          })
+        )
       }
-      decorations.push(
-        Decoration.widget(start + allDeletionsLength + allInsertsLength, deletedWidget(html, attrs), {
-          side: 0,
-          marks: [startState.schema.marks.strikethrough.create()],
-        })
-      )
       allDeletionsLength -= spanLength
       deletionsLength += spanLength
     })

@@ -34,6 +34,18 @@ export function merge(x: IChange[], y: IChange[], combine: (a: any, b: any) => a
       //                         curY.deleted, curY.inserted))
       // @ts-ignore
       curY = iY++ == y.length ? null : y[iY]
+    } else if (curX.isBlockChange() && curY.isBlockChange() || curX.isBlockChange() && curY.isChange()) {
+      let off = iY ? y[iY - 1].toB - y[iY - 1].toA : 0
+      result.push(curX.createNewWithOffset(off, true))
+      off = iX ? x[iX - 1].toB - x[iX - 1].toA : 0
+      result.push(curY.createNewWithOffset(off, false))
+      // @ts-ignore
+      curX = iX++ == x.length ? null : x[iX]
+      // @ts-ignore
+      curY = iY++ == y.length ? null : y[iY]
+      // debugger
+    } else if (curX.isChange() && curY.isBlockChange()) {
+      throw Error('TODO')
     } else { // Touch, need to merge
       // The rules for merging ranges are that deletions from the
       // old set and insertions from the new are kept. Areas of the
