@@ -2,7 +2,7 @@
 
 import { Fragment } from "prosemirror-model"
 
-import { Change } from './change'
+import { IChange } from './change'
 
 // Convert the given range of a fragment to tokens, where node open
 // tokens are encoded as strings holding the node name, characters as
@@ -42,7 +42,7 @@ function minUnchanged(sizeA: number, sizeB: number) {
 }
 
 // : (Fragment, Fragment, Change) → [Change]
-export function computeDiff(fragA: Fragment, fragB: Fragment, range: Change) {
+export function computeDiff(fragA: Fragment, fragB: Fragment, range: IChange) {
   let tokA = tokens(fragA, range.fromA, range.toA, [])
   let tokB = tokens(fragB, range.fromB, range.toB, [])
 

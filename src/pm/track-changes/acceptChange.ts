@@ -1,34 +1,29 @@
 import { EditorState, Transaction } from 'prosemirror-state'
 import { Node as PMNode, ResolvedPos } from 'prosemirror-model'
-import { Change, ChangeSet } from 'custom-changeset'
+import { BlockChange, IChange, ChangeSet } from 'custom-changeset'
 import { findWrapping, liftTarget } from 'prosemirror-transform'
 
-function updateChangesWithBlockChange(acceptedChange: Change, changes: Change[], changeIndex: number) : Change[] {
+function updateChangesWithBlockChange(acceptedChange: BlockChange, changes: IChange[], changeIndex: number) : IChange[] {
   const beforeChanges = changes.slice(0, changeIndex)
   let offset = acceptedChange.lenB - acceptedChange.lenA
-  let toBlockChangeEnd = 0
   const afterChanges = changes.slice(changeIndex + 1).map(c => {
-    if (c.isBlockChangeStart) {
-      toBlockChangeEnd += 1
-    } else if (c.isBlockChangeEnd && toBlockChangeEnd !== 0) {
-      toBlockChangeEnd -= 1
-    } else if (c.isBlockChangeEnd) {
+    if (c.isBlockChange() && acceptedChange.changeId === c.changeId) {
       offset += acceptedChange.lenB - acceptedChange.lenA
       return null
     }
-    return new Change(c.fromA + offset, c.toA + offset, c.fromB, c.toB, c.deleted, c.inserted)
-  }).filter(c => c !== null) as Change[]
+    return c.create(c.fromA + offset, c.toA + offset, c.fromB, c.toB, c.deleted, c.inserted)
+  }).filter(c => c !== null) as IChange[]
   return [...beforeChanges, ...afterChanges]
 }
 
-function updateChanges(acceptedChange: Change, changes: Change[], changeIndex: number) : Change[] {
+function updateChanges(acceptedChange: IChange, changes: IChange[], changeIndex: number) : IChange[] {
   // The changes before the accepted change stay as previously, only the changes afterwards must be updated
   // to account for the changed startDoc
   const beforeChanges = changes.slice(0, changeIndex)
   const afterChanges = changes.slice(changeIndex + 1).map(c => {
     const fromA = c.fromA - acceptedChange.lenA + acceptedChange.lenB
     const toA = c.toA - acceptedChange.lenA + acceptedChange.lenB
-    return new Change(fromA, toA, c.fromB, c.toB, c.deleted, c.inserted)
+    return c.create(fromA, toA, c.fromB, c.toB, c.deleted, c.inserted)
   })
   return [...beforeChanges, ...afterChanges]
 }
@@ -66,7 +61,7 @@ export function rejectChange(
   currentState: EditorState
 ) {
   const change = changeSet.changes[changeIndex]
-  const wasBlockChange = change.isBlockChangeStart
+  const wasBlockChange = change.isBlockChange()
   const insertOnly = change.lenA === 0
   const deleteOnly = change.lenB === 0
   let tr
@@ -92,12 +87,11 @@ export function acceptChange(
   currentState: EditorState
 ) {
   const change = oldChangeSet.changes[changeIndex]
-  const wasBlockChange = change.isBlockChangeStart
   const insertOnly = change.lenA === 0
   let changes
-  if (wasBlockChange && change.lenA > 0 && change.lenB > 0 ) {
+  if (change.isBlockChange() && change.lenA > 0 && change.lenB > 0 ) {
     throw Error('Unhandled mixed blockChange + text change')
-  } else if (wasBlockChange) {
+  } else if (change.isBlockChange()) {
     let tr
     if (insertOnly) {
       const node = currentState.doc.nodeAt(change.fromB)

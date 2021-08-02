@@ -1,7 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
 // import { Change } from 'prosemirror-changeset'
-import { Change } from 'custom-changeset'
+import { IChange } from 'custom-changeset'
 
 import { useEditorContext } from 'pm/EditorContext'
 import { usePluginState } from './usePluginState'
@@ -23,11 +23,11 @@ export function ChangesList(props: IProps) {
   function handleRejectChange(idx: number) {
     viewProvider.view.dispatch(viewProvider.view.state.tr.setMeta('reject-change', idx))
   }
-  function changeTitle(c: Change) {
-    if (c.blockChange && c.inserted.length > 0) {
-      return 'Block insert'
-    } else if (c.blockChange && c.deleted.length > 0) {
-      return 'Block delete'
+  function changeTitle(c: IChange) {
+    if (c.isBlockChange() && c.inserted.length > 0) {
+      return `Insert ${c.nodeType}`
+    } else if (c.isBlockChange() && c.deleted.length > 0) {
+      return `Delete ${c.nodeType}`
     }
     return c.deleted.length > 0 ? c.inserted.length > 0 ? 'Insertion + Deletion' : 'Deletion' : 'Insertion'
   }
@@ -35,7 +35,7 @@ export function ChangesList(props: IProps) {
   const changes = trackChangesState?.changeSet.changes || []
   return (
     <List className={className}>
-      { changes.map((c: Change, i: number) =>
+      { changes.map((c: IChange, i: number) =>
       <CommitItem
         key={i}
       >

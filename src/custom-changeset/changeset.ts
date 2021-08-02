@@ -1,11 +1,12 @@
 /* eslint-disable */
 
-import {computeDiff} from "./diff"
-import {Change} from "./change"
-import {Span} from "./span"
-
 import { Node as PMNode } from "prosemirror-model"
 import { AddMarkStep, RemoveMarkStep, ReplaceAroundStep, ReplaceStep, Step, StepMap } from "prosemirror-transform"
+
+import {computeDiff} from "./diff"
+import { Change, BlockChange, Span, merge } from './change'
+
+import { IChange } from './change/types'
 
 interface ChangeSetConfig {
   doc: PMNode
@@ -19,96 +20,12 @@ interface ChangeSetConfig {
 export class ChangeSet {
 
   config: ChangeSetConfig
-  changes: Change[]
+  changes: IChange[]
 
-  constructor(config: ChangeSetConfig, changes: Change[]) {
+  constructor(config: ChangeSetConfig, changes: IChange[]) {
     this.config = config
     // :: [Change] Replaced regions.
     this.changes = changes
-  }
-
-  addSteps2(newDoc: PMNode, steps: Step[], data?: any | any[]) {
-    let stepChanges: Change[] = []
-    // Add spans for new steps.
-    let off = 0
-    for (let i = 0; i < steps.length; i++) {
-      const step = steps[i]
-      let d = Array.isArray(data) ? data[i] : data
-
-      if (step instanceof ReplaceStep) {
-        console.log('replace step', step)
-        // @ts-ignore
-        const { from, to, slice } = step
-        const fromA = from
-        const toA = to
-        const fromB = from
-        const toB = from + slice.size
-        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
-            fromA == toA ? Span.none : [new Span(toA - fromA, d)],
-            fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
-        off = (toB - fromB) - (toA - fromA)
-        console.log('new change', stepChanges[stepChanges.length - 1])
-      } else if (step instanceof ReplaceAroundStep) {
-        console.log('replace around step', step)
-      } else if (step instanceof AddMarkStep) {
-        console.log('add mark step', step)
-        // @ts-ignore
-        const { from, to, mark } = step
-        const fromA = from
-        const toA = from
-        const fromB = from
-        const toB = to
-        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
-            fromA == toA ? Span.none : [new Span(toA - fromA, d)],
-            fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
-        off = (toB - fromB) - (toA - fromA)
-        console.log('new change', stepChanges[stepChanges.length - 1])
-
-      } else if (step instanceof RemoveMarkStep) {
-        console.log('remove mark step', step)
-        // @ts-ignore
-        const { from, to, mark } = step
-        const fromA = from
-        const toA = to
-        const fromB = from
-        const toB = from
-        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
-            fromA == toA ? Span.none : [new Span(toA - fromA, d)],
-            fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
-        off = (toB - fromB) - (toA - fromA)
-        console.log('new change', stepChanges[stepChanges.length - 1])
-  
-      } else {
-        console.error('Unknown step type! Change not tracked and possibly current changes have become inconsistent', step)
-      }
-
-    }
-    if (stepChanges.length == 0) return this
-
-    let newChanges = mergeAll(stepChanges, this.config.combine)
-    let changes = Change.merge(this.changes, newChanges, this.config.combine)
-
-    // Minimize changes when possible
-    for (let i = 0; i < changes.length; i++) {
-      let change = changes[i]
-      if (change.fromA == change.toA || change.fromB == change.toB ||
-          // Only look at changes that touch newly added changed ranges
-          !newChanges.some(r => r.toB > change.fromB && r.fromB < change.toB)) continue
-      let diff = computeDiff(this.config.doc.content, newDoc.content, change)
-
-      // Fast path: If they are completely different, don't do anything
-      if (diff.length == 1 && diff[0].fromB == 0 && diff[0].toB == change.toB - change.fromB)
-        continue
-
-      if (diff.length == 1) {
-        changes[i] = diff[0]
-      } else {
-        changes.splice(i, 1, ...diff)
-        i += diff.length - 1
-      }
-    }
-
-    return new ChangeSet(this.config, changes)
   }
 
   // :: (Node, [StepMap], union<[any], any>) → ChangeSet
@@ -122,7 +39,7 @@ export class ChangeSet {
   // than adding all those changes at once, since different document
   // tokens might be matched during simplification depending on the
   // boundaries of the current changed ranges.
-  addSteps(newDoc: PMNode, steps: Step[], data?: any | any[]) {
+  addSteps(oldDoc: PMNode, newDoc: PMNode, steps: Step[], data?: any | any[]) {
     // This works by inspecting the position maps for the changes,
     // which indicate what parts of the document were replaced by new
     // content, and the size of that new content. It uses these to
@@ -136,33 +53,59 @@ export class ChangeSet {
     // For each change that was touched by the new steps, we recompute
     // a diff to try to minimize the change by dropping matching
     // pieces of the old and new document from the change.
-
-    let stepChanges: Change[] = []
+    console.log(newDoc)
+    let stepChanges: IChange[] = []
     // Add spans for new steps.
     for (let i = 0; i < steps.length; i++) {
+      const step = steps[i]
       let d = Array.isArray(data) ? data[i] : data
       let off = 0
-      let insideReplaceAroundStep = false
-      steps[i].getMap().forEach((fromA: number, toA: number, fromB: number, toB: number) => {
-        console.log(`changed ${fromA} ${toA} ${fromB} ${toB}`)
-        if (steps[i] instanceof ReplaceAroundStep && !insideReplaceAroundStep) {
-          insideReplaceAroundStep = true
-          d = { ...d, blockChange: 'start' }
-        } else if (steps[i] instanceof ReplaceAroundStep && insideReplaceAroundStep) {
-          insideReplaceAroundStep = false
-          d = { ...d, blockChange: 'end' }
-        }
-        stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
-                                    fromA == toA ? Span.none : [new Span(toA - fromA, d)],
-                                    fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
 
-        off = (toB - fromB) - (toA - fromA)
-      })
+      if (step instanceof ReplaceStep) {
+        step.getMap().forEach((fromA: number, toA: number, fromB: number, toB: number) => {
+          console.log(`changed ${fromA} ${toA} ${fromB} ${toB}`)
+          stepChanges.push(new Change(fromA + off, toA + off, fromB, toB,
+                                      fromA == toA ? Span.none : [new Span(toA - fromA, d)],
+                                      fromB == toB ? Span.none : [new Span(toB - fromB, d)]))
+  
+          off = (toB - fromB) - (toA - fromA)
+        })
+      } else if (step instanceof ReplaceAroundStep) {
+        let insideReplaceAroundStep = false
+        let changeId = Math.random().toString()
+        let node: PMNode | null | undefined
+        // @ts-ignore
+        const { slice } = step
+        const nodeDeleted = slice.size === 0
+        step.getMap().forEach((fromA: number, toA: number, fromB: number, toB: number) => {
+          console.log(`changed ${fromA} ${toA} ${fromB} ${toB}`)
+          if (!insideReplaceAroundStep) {
+            node = nodeDeleted ? oldDoc.nodeAt(fromA) : newDoc.nodeAt(fromB) 
+            insideReplaceAroundStep = true
+            d = { ...d, blockChange: 'start', changeId, nodeType: node?.type.name }
+          } else {
+            insideReplaceAroundStep = false
+            d = { ...d, blockChange: 'end', changeId, nodeType: node?.type.name }
+            changeId = Math.random().toString()
+          }
+          const inserted = fromA == toA ? Span.none : [new Span(toA - fromA, d)]
+          const deleted = fromB == toB ? Span.none : [new Span(toB - fromB, d)]
+          stepChanges.push(new BlockChange(fromA + off, toA + off, fromB, toB, inserted, deleted, insideReplaceAroundStep))
+  
+          off = (toB - fromB) - (toA - fromA)
+        })
+      } else if (step instanceof AddMarkStep) {
+        console.log('add mark step', step)
+      } else if (step instanceof RemoveMarkStep) {
+        console.log('remove mark step', step)
+      } else {
+        console.error('Unknown step type! Change not tracked and possibly current changes have become inconsistent', step)
+      }
     }
     if (stepChanges.length == 0) return this
 
     let newChanges = mergeAll(stepChanges, this.config.combine)
-    let changes = Change.merge(this.changes, newChanges, this.config.combine)
+    let changes = merge(this.changes, newChanges, this.config.combine)
 
     // Minimize changes when possible
     for (let i = 0; i < changes.length; i++) {
@@ -194,11 +137,11 @@ export class ChangeSet {
   // :: (f: (range: Change) → any) → ChangeSet
   // Map the span's data values in the given set through a function
   // and construct a new set with the resulting data.
-  map(f: (range: Change) => any) {
+  map(f: (range: IChange) => any) {
     return new ChangeSet(this.config, this.changes.map(change => {
       let result = f(change)
       return result === change ? change :
-        new Change(change.fromA, change.toA, change.fromB, change.toB, change.deleted, change.inserted)
+        change.create(change.fromA, change.toA, change.fromB, change.toB, change.deleted, change.inserted)
     }))
   }
 
@@ -249,14 +192,14 @@ ChangeSet.computeDiff = computeDiff
 // : ([[Change]], (any, any) → any, number, number) → [Change]
 // Divide-and-conquer approach to merging a series of ranges.
 function mergeAll(
-  ranges: Change[],
+  ranges: IChange[],
   combine: (data1: any, data2: any) => null | any,
   start = 0,
   end = ranges.length
-) : Change[] {
+) : IChange[] {
   if (end == start + 1) return [ranges[start]]
   let mid = (start + end) >> 1
-  return Change.merge(mergeAll(ranges, combine, start, mid),
+  return merge(mergeAll(ranges, combine, start, mid),
                       mergeAll(ranges, combine, mid, end), combine)
 }
 
@@ -284,7 +227,7 @@ function touchedRange(maps: StepMap[]) {
   return {fromA: a.from, toA: a.to, fromB: b.from, toB: b.to}
 }
 
-function sameRanges(a: Change, b: Change, map: (pos: number) => number) {
+function sameRanges(a: IChange, b: IChange, map: (pos: number) => number) {
   return map(a.fromB) == b.fromB && map(a.toB) == b.toB &&
     sameSpans(a.deleted, b.deleted) && sameSpans(a.inserted, b.inserted)
 }

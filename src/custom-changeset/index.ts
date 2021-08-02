@@ -1,8 +1,7 @@
 /* eslint-disable */
 
-import { ChangeSet } from './changeset'
-import {Change} from "./change"
-import {Span} from "./span"
+export { ChangeSet } from './changeset'
+export { Change, BlockChange, Span } from './change'
+export type { IChange } from './change'
 
-export {ChangeSet, Change, Span}
 export {simplifyChanges} from "./simplify"
