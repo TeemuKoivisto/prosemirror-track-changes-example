@@ -1,11 +1,10 @@
-import React, { useEffect, useLayoutEffect, useRef } from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { EditorView } from 'prosemirror-view'
 import { EditorState, Transaction } from 'prosemirror-state'
-import { exampleSetup } from 'prosemirror-example-setup'
 
 import { schema } from './schema'
-import { activeNodesMarksPlugin } from './active-nodes-marks'
-import { trackChangesPlugin } from './track-changes/track-changes-plugin'
+
+import { plugins } from './plugins'
 
 import { useEditorContext } from './EditorContext'
 
@@ -41,10 +40,7 @@ export function PMEditor(props: EditorProps) {
   function createEditorState() {
     return EditorState.create({
       schema,
-      plugins: exampleSetup({ schema }).concat(
-        activeNodesMarksPlugin(),
-        trackChangesPlugin(),
-      ),
+      plugins: plugins()
     })
   }
 

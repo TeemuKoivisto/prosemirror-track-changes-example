@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import debounce from 'lodash.debounce'
 
 import { EditorView } from 'prosemirror-view'
-import { applyDevTools } from 'prosemirror-dev-tools'
+import { applyDevTools } from 'prosemirror-dev-toolkit'
 
 import { useUIContext } from 'context/UIStore'
 
@@ -18,8 +18,13 @@ import { EditorStore } from './EditorStore'
 import { ReactEditorContext } from 'pm/EditorContext'
 import { createDefaultProviders } from 'pm/Providers'
 
-export function Editor() {
-  const editorStore = useMemo(() => new EditorStore('track-changes'), [])
+interface IProps {
+  markTrackChangesPlugin?: boolean
+}
+
+export function Editor(props: IProps) {
+  const { markTrackChangesPlugin } = props
+  const editorStore = useMemo(() => new EditorStore(markTrackChangesPlugin ? 'mark-track-changes' : 'track-changes'), [])
   const debouncedSync = useMemo(() => debounce(editorStore.syncCurrentEditorState, 250), [])
   const editorProviders = useMemo(() => createDefaultProviders(), [])
   const uiStore = useUIContext()
@@ -31,6 +36,9 @@ export function Editor() {
     editorStore.setEditorView(view)
     applyDevTools(view)
     injectTrackChanges(view)
+    if (markTrackChangesPlugin) {
+      editorProviders.viewProvider.setMarkTrackChangesPlugin(true)
+    }
   }
   return (
     <ReactEditorContext.Provider value={editorProviders}>
