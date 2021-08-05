@@ -1,11 +1,15 @@
 import * as React from 'react'
 import { render } from 'react-dom'
 
+import { UIContext, createStore } from 'context/UIStore'
+
 import { Routes } from './routes'
 
 import './index.css'
 
 render(
-  <Routes />,
+  <UIContext.Provider value={createStore()}>
+    <Routes />
+  </UIContext.Provider>,
   document.getElementById('root')
 )

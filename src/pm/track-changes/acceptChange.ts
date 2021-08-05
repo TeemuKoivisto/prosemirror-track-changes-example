@@ -85,7 +85,7 @@ export function acceptChange(
   oldChangeSet: ChangeSet,
   startState: EditorState,
   currentState: EditorState
-) {
+) : [ChangeSet, EditorState] {
   const change = oldChangeSet.changes[changeIndex]
   const insertOnly = change.lenA === 0
   let changes
@@ -99,7 +99,7 @@ export function acceptChange(
     } else {
       tr = liftNode(change.fromA + 1, startState.doc, startState.tr)
     }
-    if (!tr) return oldChangeSet
+    if (!tr) return [oldChangeSet, startState]
     startState = startState.apply(tr)
     changes = updateChangesWithBlockChange(change, oldChangeSet.changes, changeIndex)
   } else {
@@ -107,5 +107,5 @@ export function acceptChange(
     startState = startState.apply(startState.tr.replaceWith(change.fromA, change.toA, slice.content))
     changes = updateChanges(change, oldChangeSet.changes, changeIndex)
   }
-  return new ChangeSet({ ...oldChangeSet.config, doc: startState.doc }, changes)
+  return [new ChangeSet({ ...oldChangeSet.config, doc: startState.doc }, changes), startState]
 }

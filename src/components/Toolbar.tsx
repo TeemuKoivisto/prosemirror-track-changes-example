@@ -6,13 +6,19 @@ import {
   FiBold, FiItalic, FiAtSign
 } from 'react-icons/fi'
 import { GrBlockQuote } from 'react-icons/gr'
+import { MdViewWeek } from 'react-icons/md'
 
+import { useUIContext } from 'context/UIStore'
 import { useEditorContext } from 'pm/EditorContext'
 import { usePluginState } from './usePluginState'
 import { activeNodesMarksPluginKey, ActiveNodesMarksState } from 'pm/active-nodes-marks'
 import { setBlockNodeAttribute } from 'pm/commands'
 
-type IconType = 'bold' | 'italic' | 'toggle-blockquote' | 'update-attribute'
+interface IProps {
+  className?: string
+}
+
+type IconType = 'bold' | 'italic' | 'toggle-blockquote' | 'update-attribute' | 'toggle-split-view'
 
 const marksIcons: {
   title: IconType
@@ -39,12 +45,18 @@ const commandIcons: {
   {
     title: 'update-attribute',
     icon: <FiAtSign size={16} />
+  },
+  {
+    title: 'toggle-split-view',
+    icon: <MdViewWeek size={16} />
   }
 ]
 
-export function Toolbar() {
+export function Toolbar(props: IProps) {
+  const { className } = props
   const { viewProvider } = useEditorContext()
   const activeNodesMarksPlugin = usePluginState<ActiveNodesMarksState>(activeNodesMarksPluginKey)
+  const uiStore = useUIContext()
 
   function handleIconClick(title: IconType) {
     switch (title) {
@@ -59,10 +71,13 @@ export function Toolbar() {
       case 'update-attribute':
         viewProvider.execCommand(setBlockNodeAttribute())
         return
+      case 'toggle-split-view':
+        uiStore.toggleTrackChangesPMState()
+        return
     }
   }
   return (
-    <Container>
+    <Container className={className}>
       <IconList>
         {marksIcons.map(item =>
           <IconItem key={item.title}>

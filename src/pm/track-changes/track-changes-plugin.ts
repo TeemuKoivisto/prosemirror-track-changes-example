@@ -60,7 +60,7 @@ export const trackChangesPlugin = () => {
         let startState = oldStartState
         const acceptedChangeIndex = Number(tr.getMeta('accept-change'))
         if (!Number.isNaN(acceptedChangeIndex)) {
-          changeSet = acceptChange(acceptedChangeIndex, oldChangeSet, startState, newState)
+          [changeSet, startState] = acceptChange(acceptedChangeIndex, oldChangeSet, startState, newState)
         } else {
           changeSet = oldChangeSet.addSteps(oldState.doc, tr.doc, tr.steps, { userID })
         }
