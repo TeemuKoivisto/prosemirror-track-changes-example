@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import debounce from 'lodash.debounce'
 
 import { EditorView } from 'prosemirror-view'
-import { applyDevTools } from 'prosemirror-dev-toolkit'
+import { applyDevTools } from 'prosemirror-dev-tools'
 
 import { useUIContext } from 'context/UIStore'
 
@@ -35,17 +35,19 @@ export function Editor() {
   return (
     <ReactEditorContext.Provider value={editorProviders}>
       <SelectUser/>
-      <ViewGrid>
-        { uiStore.showTrackChangesPMState && <TrackChangesPMState className="track-changes"/>}
-        <Toolbar className={`toolbar ${uiStore.showTrackChangesPMState ? '' : 'full-width'}`}/>
-        <div className={`pm-editor ${uiStore.showTrackChangesPMState ? '' : 'full-width'}`}>
-          <PMEditor
-            onEdit={handleEdit}
-            onEditorReady={handleEditorReady}
-          />
-        </div>
-        <ChangesList className="changes-list"/>
-      </ViewGrid>
+      <div>
+        <ViewGrid>
+          { uiStore.showTrackChangesPMState && <TrackChangesPMState className="track-changes"/>}
+          <Toolbar className={`toolbar ${uiStore.showTrackChangesPMState ? '' : 'full-width'}`}/>
+          <div className={`pm-editor ${uiStore.showTrackChangesPMState ? '' : 'full-width'}`}>
+            <PMEditor
+              onEdit={handleEdit}
+              onEditorReady={handleEditorReady}
+            />
+          </div>
+          <ChangesList className="changes-list"/>
+        </ViewGrid>
+      </div>
     </ReactEditorContext.Provider>
   )
 }
@@ -53,15 +55,13 @@ export function Editor() {
 const ViewGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 56px 71px auto;
-  left: 0.5rem;
+  grid-template-rows: 56px auto;
   margin-top: 1rem;
-  position: absolute;
-  right: 0.5rem;
   & > .track-changes {
     grid-column-start: 1;
-    grid-row-start: 3;
+    grid-row-start: 2;
     margin-bottom: 1rem;
+    margin-top: 71px;
   }
   & > .toolbar {
     grid-column-start: 2;
@@ -69,7 +69,6 @@ const ViewGrid = styled.div`
     &.full-width {
       grid-column-end: 3;
       grid-column-start: 1;
-      grid-row-start: 1;
       margin-left: auto;
       max-width: 500px;
       width: 100%;
@@ -78,16 +77,18 @@ const ViewGrid = styled.div`
   & > .pm-editor {
     grid-column-start: 2;
     grid-row-start: 2;
+    height: max-content;
+    min-height: 300px;
     &.full-width {
       grid-column-end: 3;
       grid-column-start: 1;
-      grid-row-start: 2;
       margin-left: auto;
     }
   }
   & > .changes-list {
     grid-column-start: 3;
     grid-row-start: 1;
+    grid-row-end: 2;
     margin: 0.25rem;
   }
 `

@@ -13,6 +13,12 @@ export const ChangeNode = (props: IProps) => {
   function handleChangeClick(change: Change) {
     console.log(change)
   }
+  function stringifyValue(v: any) {
+    if (typeof v === 'object') {
+      return JSON.stringify(v)
+    }
+    return v
+  }
   return (
     <>
       <Container className={className} depth={node.depth}>
@@ -22,7 +28,7 @@ export const ChangeNode = (props: IProps) => {
               <span className="msg">{c.msg}</span>
               <span className="msg">{c.type}</span>
               <span className="msg">{c.key}</span>
-              <span className="msg">{c.value}</span>
+              <span className="msg">{stringifyValue(c.value)}</span>
               <ShowBtn onClick={() => handleChangeClick(c)}>Show</ShowBtn>
             </ChangeItem>
           ))}
