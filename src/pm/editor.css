@@ -11,3 +11,10 @@
   max-width: 500px;
   width: 100%;
 }
+
+.insertion {
+  background: #10c727;
+}
+.deletion {
+  background: #ff0707;
+}

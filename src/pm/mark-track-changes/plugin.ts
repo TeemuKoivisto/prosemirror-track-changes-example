@@ -4,6 +4,8 @@ import { DOMSerializer } from 'prosemirror-model'
 
 import { ExampleSchema } from '../schema'
 
+import { trackTransaction } from './trackTransaction'
+
 export interface MarkTrackChangesState {
   userColors: Map<string, [string, string]>
   userID: string
@@ -44,17 +46,19 @@ export const markTrackChangesPlugin = () => {
       },
     },
     filterTransaction(tr, editorState) {
+      // console.log(tr.getMeta('tracked-tr'))
+      // tr.steps.forEach((step, idx) => {
+      //   console.log(step)
+      // })
       return true
     },
-    // appendTransaction(trs, _oldState, newState) {
-    //   const rejectedChangeTr = trs.find(tr => !Number.isNaN(tr.getMeta('reject-change')))
-    //   const rejectedChangeIndex = Number(rejectedChangeTr?.getMeta('reject-change'))
-    //   const trackState = trackChangesPluginKey.getState(newState)
-    //   if (!Number.isNaN(rejectedChangeIndex) && trackState) {
-    //     const { changeSet, startState } = trackState
-    //     return rejectChange(rejectedChangeIndex, changeSet, startState, newState)
-    //   }
-    //   return null
-    // },
+    appendTransaction(trs, _oldState, newState) {
+      const state = markTrackChangesPluginKey.getState(newState)
+      let createdTr = newState.tr
+      trs.forEach(tr => {
+        createdTr = trackTransaction(tr, createdTr, state?.userID || '1')
+      })
+      return createdTr
+    },
   })
 }

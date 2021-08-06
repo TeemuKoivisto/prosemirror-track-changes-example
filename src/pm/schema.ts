@@ -1,6 +1,6 @@
 import { Schema } from 'prosemirror-model'
 
-export type Marks = 'bold' | 'code' | 'italic' | 'link' | 'strikethrough'
+export type Marks = 'bold' | 'code' | 'italic' | 'link' | 'strikethrough' | 'insertion' | 'deletion'
 export type Nodes =
   | 'blockquote'
   | 'code_block'
@@ -218,6 +218,22 @@ export const schema: ExampleSchema = new Schema<Nodes, Marks>({
         { style: 'text-decoration-line=line-through' },
       ],
       toDOM: () => ['s'],
-    }
+    },
+
+    insertion: {
+      attrs: { dataTracked: { default: null } },
+      parseDOM: [
+        { tag: 'span.insertion' },
+      ],
+      toDOM: () => ['span', { class: 'insertion' }],
+    },
+
+    deletion: {
+      attrs: { dataTracked: { default: null } },
+      parseDOM: [
+        { tag: 'span.deletion' },
+      ],
+      toDOM: () => ['span', { class: 'deletion' }],
+    },
   },
 })
