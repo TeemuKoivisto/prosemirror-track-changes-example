@@ -3,28 +3,23 @@ import styled from 'styled-components'
 import debounce from 'lodash.debounce'
 
 import { EditorView } from 'prosemirror-view'
-import { applyDevTools } from 'prosemirror-dev-toolkit'
+import { applyDevTools } from 'prosemirror-dev-tools'
 
 import { useUIContext } from 'context/UIStore'
 
-import { Toolbar } from './Toolbar'
-import { SelectUser } from './SelectUser'
+import { Toolbar } from '../Toolbar'
+import { SelectUser } from '../SelectUser'
 import { ChangesList } from './ChangesList'
 import { TrackChangesPMState } from './TrackChangesPMState'
-import { injectTrackChanges } from './track-changes-panel'
+import { injectTrackChanges } from '../track-changes-panel'
 
 import { PMEditor } from 'pm/PMEditor'
-import { EditorStore } from './EditorStore'
+import { EditorStore } from '../EditorStore'
 import { ReactEditorContext } from 'pm/EditorContext'
 import { createDefaultProviders } from 'pm/Providers'
 
-interface IProps {
-  markTrackChangesPlugin?: boolean
-}
-
-export function Editor(props: IProps) {
-  const { markTrackChangesPlugin } = props
-  const editorStore = useMemo(() => new EditorStore(markTrackChangesPlugin ? 'mark-track-changes' : 'track-changes'), [])
+export function Editor() {
+  const editorStore = useMemo(() => new EditorStore('track-changes'), [])
   const debouncedSync = useMemo(() => debounce(editorStore.syncCurrentEditorState, 250), [])
   const editorProviders = useMemo(() => createDefaultProviders(), [])
   const uiStore = useUIContext()
@@ -36,9 +31,6 @@ export function Editor(props: IProps) {
     editorStore.setEditorView(view)
     applyDevTools(view)
     injectTrackChanges(view)
-    if (markTrackChangesPlugin) {
-      editorProviders.viewProvider.setMarkTrackChangesPlugin(true)
-    }
   }
   return (
     <ReactEditorContext.Provider value={editorProviders}>

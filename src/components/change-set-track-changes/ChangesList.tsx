@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import { IChange } from 'custom-changeset'
 
 import { useEditorContext } from 'pm/EditorContext'
-import { usePluginState } from './usePluginState'
+import { usePluginState } from '../usePluginState'
 
 import { TrackChangesState, trackChangesPluginKey } from 'pm/track-changes/track-changes-plugin'
 

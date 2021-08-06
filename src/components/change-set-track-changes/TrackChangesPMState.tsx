@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 import { DOMSerializer } from 'prosemirror-model'
 
-import { usePluginState } from './usePluginState'
+import { usePluginState } from '../usePluginState'
 import { trackChangesPluginKey, TrackChangesState } from 'pm/track-changes/track-changes-plugin'
 
 interface IProps {

@@ -10,6 +10,14 @@ export function trackTransaction(tr: Transaction<ExampleSchema>, newTr: Transact
       time: tr.time,
     }
   }
+  // text_changes, node_changes, mark_changes
+  const changes: {
+    ranges: any[],
+    nodes: any[]
+  } = {
+    ranges: [],
+    nodes: [],
+  }
   const insertMark = schema.marks.insertion.create(trackAttrs)
 
   tr.steps.forEach((step, idx) => {
@@ -18,9 +26,11 @@ export function trackTransaction(tr: Transaction<ExampleSchema>, newTr: Transact
         if (fromB === toB) return
         // console.log(`changed ${fromA} ${toA} ${fromB} ${toB}`)
         newTr.addMark(fromB, toB, insertMark)
+        changes.ranges.push([fromB, toB, trackAttrs])
         newTr.doc.nodesBetween(fromB, toB, (node, pos) => {
           if (node.isBlock) {
             newTr.setNodeMarkup(pos, undefined, Object.assign({}, node.attrs, trackAttrs), node.marks)
+            changes.nodes.push([pos, trackAttrs])
           }
         })
       })
@@ -29,5 +39,5 @@ export function trackTransaction(tr: Transaction<ExampleSchema>, newTr: Transact
     }
   })
   // console.log(newTr)
-  return newTr.setMeta('tracked-tr', true)
+  return newTr.setMeta('tracked-tr', true).setMeta('track-changes', changes)
 }

@@ -2,7 +2,7 @@ import React from 'react'
 import styled from 'styled-components'
 
 import { PageHeader } from '../components/PageHeader'
-import { Editor } from '../components/Editor'
+import { Editor } from '../components/change-set-track-changes/ChangeSetEditor'
 
 export function FrontPage() {
   return (

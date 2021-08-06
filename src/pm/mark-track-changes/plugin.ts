@@ -1,14 +1,14 @@
-import { DecorationSet } from 'prosemirror-view'
 import { EditorState, Plugin, PluginKey } from 'prosemirror-state'
-import { DOMSerializer } from 'prosemirror-model'
 
-import { ExampleSchema } from '../schema'
+import { schema, ExampleSchema } from '../schema'
 
+import { Changes } from './changes'
 import { trackTransaction } from './trackTransaction'
 
 export interface MarkTrackChangesState {
   userColors: Map<string, [string, string]>
   userID: string
+  changes: Changes
 }
 
 export const markTrackChangesPluginKey = new PluginKey<MarkTrackChangesState, ExampleSchema>('mark-track-changes')
@@ -25,9 +25,29 @@ export const markTrackChangesPlugin = () => {
     key: markTrackChangesPluginKey,
     state: {
       init(config, state) {
+        const changes = new Changes([], [])
+        state.doc.descendants((node, pos) => {
+          const insertionMark = node.marks.find(m => m.type === schema.marks.insertion)
+          const deletionMark = node.marks.find(m => m.type === schema.marks.deletion)
+          if (node.isInline && insertionMark) {
+            changes.pushChange({
+              type: 'text-change',
+              from: pos,
+              to: pos + node.nodeSize, 
+              data: insertionMark ? insertionMark : deletionMark
+            })
+          } else if (node.attrs.dataTracked) {
+            changes.pushChange({
+              type: 'node-change',
+              from: pos,
+              data: node.attrs.dataTracked
+            })
+          }
+        })
         return {
           userColors: new Map(),
           userID: '1',
+          changes,
         }
       },
 
@@ -35,13 +55,18 @@ export const markTrackChangesPlugin = () => {
         if (tr.getMeta('set-userID')) {
           return { ...value, userID: tr.getMeta('set-userID') }
         }
-        const { userColors, userID } = value
+        const { userColors, userID, changes } = value
         if (!userColors.has(userID)) {
           userColors.set(userID, colorScheme[userColors.size])
+        }
+        const trackChanges = tr.getMeta('track-changes')
+        if (trackChanges) {
+          console.log(trackChanges)
         }
         return {
           userColors,
           userID,
+          changes,
         }
       },
     },
